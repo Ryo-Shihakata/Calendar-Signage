@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendar Signage</title>
+<meta name="calendar-api-base" content="http://127.0.0.1:8787">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Roboto',sans-serif;font-size:15px}
+
+/* ── THEME ── */
+:root{
+  --p:#1a73e8;--p-l:rgba(26,115,232,.1);--p-m:rgba(26,115,232,.18);
+  --bg:#fff;--bg2:#f1f3f4;--bg3:#fff;
+  --sf:#f8f9fa;--sf2:#f1f3f4;
+  --bd:#dadce0;--bd2:#e8eaed;
+  --tx:#3c4043;--tx2:#5f6368;--tx3:#80868b;
+  --today:#1a73e8;--today-tx:#fff;
+  --nowline:#ea4335;
+  --sun:#d93025;--sat:#1a73e8;
+  --g:#34a853;--r:#ea4335;--y:#fbbc04;
+  --shadow:0 1px 3px rgba(60,64,67,.15),0 1px 2px rgba(60,64,67,.25);
+  --shadow-lg:0 4px 20px rgba(60,64,67,.18);
+  --mono:'Roboto Mono',monospace;
+}
+[data-theme="dark"]{
+  --p:#8ab4f8;--p-l:rgba(138,180,248,.15);--p-m:rgba(138,180,248,.25);
+  --bg:#1e1e1e;--bg2:#252525;--bg3:#2a2a2a;
+  --sf:#2a2a2a;--sf2:#333;
+  --bd:#606060;--bd2:#7a7a7a;
+  --tx:#f0f0f0;--tx2:#c8c8c8;--tx3:#a0a0a0;
+  --today:#8ab4f8;--today-tx:#1e1e1e;
+  --nowline:#f28b82;
+  --sun:#f28b82;--sat:#8ab4f8;
+  --g:#81c995;--r:#f28b82;--y:#fdd663;
+  --shadow:0 1px 3px rgba(0,0,0,.5);
+  --shadow-lg:0 4px 20px rgba(0,0,0,.45);
+}
+body{background:var(--bg);color:var(--tx);transition:background .3s,color .3s}
+button,input,select{font-family:inherit}
+
+/* ── VIEWS ── */
+.view{display:none;width:100%;height:100vh}
+#signage.on{display:grid}
+#admin.on{display:grid}
+
+/* ==============================
+   SIGNAGE VIEW
+   ============================== */
+#signage{
+  grid-template-rows:56px 1fr;
+  grid-template-columns:440px 1fr;
+  height:100vh;
+}
+
+/* Header */
+#sig-hdr{
+  grid-column:1/-1;
+  display:flex;align-items:center;
+  padding:0 20px;gap:16px;
+  background:var(--bg);border-bottom:1px solid var(--bd);
+  box-shadow:0 1px 4px rgba(60,64,67,.08);
+  flex-shrink:0;
+}
+#sig-clock{
+  font-size:32px;font-weight:400;letter-spacing:-.5px;
+  color:var(--tx);min-width:140px;
+  font-variant-numeric:tabular-nums;
+}
+#sig-clock em{color:var(--p);font-style:normal}
+#sig-dateinfo{display:flex;flex-direction:column;gap:0}
+#sig-date{font-size:13px;color:var(--tx3);font-family:var(--mono);letter-spacing:.04em}
+#sig-dow{font-size:16px;font-weight:600;color:var(--tx)}
+.sig-hr{margin-left:auto;display:flex;align-items:center;gap:8px}
+.status-pill{
+  display:flex;align-items:center;gap:5px;
+  font-size:10px;color:var(--tx3);font-family:var(--mono);
+  padding:3px 10px;background:var(--sf);border-radius:100px;border:1px solid var(--bd);
+}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--g);animation:sdot 2.5s infinite}
+.sdot.err{background:var(--r);animation:none}
+.sdot.loading{background:var(--y);animation:sdot .8s infinite}
+@keyframes sdot{0%,100%{opacity:1}50%{opacity:.25}}
+.profile-pill{
+  display:flex;align-items:center;gap:5px;
+  padding:4px 12px;background:var(--sf);border-radius:100px;
+  border:1px solid var(--bd);cursor:pointer;transition:all .15s;
+  font-size:11px;color:var(--tx2);
+}
+.profile-pill:hover{border-color:var(--p);color:var(--p)}
+.icon-btn{
+  width:30px;height:30px;border-radius:50%;background:transparent;border:none;
+  cursor:pointer;color:var(--tx2);font-size:15px;display:flex;align-items:center;justify-content:center;
+  transition:background .15s;
+}
+.icon-btn:hover{background:var(--sf2)}
+
+/* Left panel */
+#sig-left{
+  background:var(--bg);border-right:1px solid var(--bd);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.plbl{
+  font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.12em;text-transform:uppercase;
+  padding:10px 16px 4px;flex-shrink:0;
+}
+/* ── Today hero ── */
+#today-hero{
+  display:flex;align-items:flex-end;gap:10px;
+  padding:4px 20px 14px;border-bottom:1px solid var(--bd);flex-shrink:0;
+}
+#today-num{font-size:72px;font-weight:400;color:var(--p);line-height:1;font-variant-numeric:tabular-nums}
+#today-meta{display:flex;flex-direction:column;padding-bottom:8px;gap:2px}
+#today-month{font-size:22px;font-weight:600;color:var(--tx)}
+#today-year{font-size:15px;color:var(--tx3)}
+/* ── Event list ── */
+#ev-list-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--bd) transparent;padding:8px 0;min-height:0}
+.ev-group{padding:0 14px}
+.ev-group-label{
+  font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.1em;text-transform:uppercase;
+  padding:10px 6px 5px;
+}
+.ev-item{
+  display:flex;align-items:stretch;gap:0;
+  border-radius:10px;margin-bottom:6px;overflow:hidden;
+  border:1px solid var(--bd);background:var(--bg);
+  transition:box-shadow .15s;cursor:default;
+}
+.ev-item:hover{box-shadow:0 2px 8px rgba(60,64,67,.12)}
+.ev-item-stripe{width:6px;flex-shrink:0}
+.ev-item-body{flex:1;padding:12px 14px;min-width:0}
+.ev-item-title{font-size:17px;font-weight:600;color:var(--tx);line-height:1.3;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev-item-time{font-size:14px;color:var(--tx2);font-family:var(--mono);margin-bottom:4px;font-weight:500}
+.ev-item-cal{font-size:13px;color:var(--tx3);display:flex;align-items:center;gap:5px;font-weight:500}
+.ev-item-cal-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.ev-item.current .ev-item-body{background:var(--p-l)}
+.ev-item.allday .ev-item-title{font-size:14px}
+.ev-empty{padding:20px 20px;font-size:13px;color:var(--tx3);text-align:center}
+
+/* Right panel */
+#sig-right{background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#sig-month{flex:1;display:flex;flex-direction:column;padding:12px 14px 8px;overflow:hidden}
+#month-hdr{margin-bottom:6px}
+#month-title{font-size:19px;font-weight:700;color:var(--tx)}
+#month-year{font-size:19px;font-weight:400;color:var(--tx2);margin-left:6px}
+/* Month: week-row based layout for spanning events */
+.month-grid{
+  display:flex;flex-direction:column;
+  border:1px solid var(--bd);border-radius:8px;overflow:hidden;flex:1;
+}
+.cal-header{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  background:var(--sf);border-bottom:1px solid var(--bd);flex-shrink:0;
+}
+.month-dow{
+  background:var(--sf);text-align:center;font-size:12px;font-weight:700;
+  color:var(--tx3);padding:6px 0 5px;letter-spacing:.04em;
+}
+.month-dow.sun{color:var(--sun)}.month-dow.sat{color:var(--sat)}
+.cal-week{
+  display:flex;flex-direction:column;flex:1;
+  border-bottom:1px solid var(--bd);min-height:0;
+}
+.cal-week:last-child{border-bottom:none}
+.cal-dnums{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  flex-shrink:0;
+}
+.mcell{
+  background:var(--bg);padding:3px 4px 2px;
+  border-right:1px solid var(--bd);
+  cursor:default;transition:background .1s;
+}
+.mcell:last-child{border-right:none}
+.mcell:hover{background:var(--sf)}
+.mcell.today .mdn{background:var(--today);color:var(--today-tx)!important;font-weight:500}
+.mcell.sun .mdn{color:var(--sun)}.mcell.sat .mdn{color:var(--sat)}
+.mdn{
+  font-size:13px;font-weight:600;color:var(--tx2);
+  width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;line-height:1;
+}
+/* Event span rows */
+.cal-evrows{
+  display:flex;flex-direction:column;gap:1px;
+  padding:1px 0 3px;flex:1;overflow:hidden;
+}
+.cal-evrow{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  height:22px;flex-shrink:0;
+}
+.mspan{
+  height:20px;line-height:20px;
+  font-size:12px;font-weight:600;color:#fff;
+  padding:0 7px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  cursor:default;margin:0 1px;
+}
+.mspan:hover{filter:brightness(.88)}
+.cal-overflow{height:18px}
+.mover{
+  font-size:11px;color:var(--tx3);font-weight:600;
+  padding:0 5px;line-height:16px;
+  white-space:nowrap;overflow:hidden;
+}
+
+/* Day separator in event list */
+.ev-day-sep{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 14px 6px;flex-shrink:0;
+}
+.ev-day-sep-num{
+  font-size:28px;font-weight:300;color:var(--tx2);line-height:1;
+  font-variant-numeric:tabular-nums;min-width:36px;
+}
+.ev-day-sep-meta{display:flex;flex-direction:column;justify-content:center;gap:1px}
+.ev-day-sep-dow{font-size:14px;font-weight:600;color:var(--tx2)}
+.ev-day-sep-date{font-size:11px;color:var(--tx3);font-family:var(--mono)}
+.ev-day-sep-tag{
+  margin-left:auto;font-size:11px;font-weight:700;font-family:var(--mono);
+  padding:2px 8px;border-radius:100px;
+}
+.ev-day-sep-tag.tom{background:var(--p-l);color:var(--p)}
+.ev-day-sep-tag.soon{background:rgba(234,67,53,.1);color:var(--r)}
+.ev-day-sep-line{
+  display:flex;align-items:center;padding:22px 14px 4px;
+  margin-top:6px;
+}
+.ev-day-sep-line::after{content:'';flex:1;height:2px;background:var(--bd)}
+
+.empty-msg{text-align:center;padding:16px;font-size:12px;color:var(--tx3)}
+
+/* ==============================
+   ADMIN VIEW
+   ============================== */
+#admin{
+  grid-template-rows:56px 1fr;height:100vh;
+}
+#adm-hdr{
+  display:flex;align-items:center;padding:0 20px;gap:16px;
+  background:var(--bg);border-bottom:1px solid var(--bd);box-shadow:var(--shadow);
+}
+.adm-logo{font-size:16px;font-weight:500;color:var(--p)}
+.adm-logo span{color:var(--tx);font-weight:300}
+.adm-hr{margin-left:auto;display:flex;gap:8px;align-items:center}
+.btn-out{
+  padding:6px 16px;border-radius:4px;border:1px solid var(--bd);background:var(--bg);
+  font-size:12px;color:var(--tx2);cursor:pointer;transition:all .15s;
+}
+.btn-out:hover{border-color:var(--p);color:var(--p);background:var(--p-l)}
+.btn-prim{
+  padding:6px 18px;border-radius:4px;border:none;background:var(--p);
+  font-size:12px;color:#fff;cursor:pointer;font-weight:500;transition:opacity .15s;
+}
+.btn-prim:hover{opacity:.85}
+.btn-prim:active{transform:scale(.98)}
+
+#adm-body{display:grid;grid-template-columns:220px 1fr;overflow:hidden;height:100%}
+#adm-sidebar{
+  background:var(--bg);border-right:1px solid var(--bd);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.sb-sec{font-size:10px;font-weight:500;color:var(--tx3);letter-spacing:.1em;text-transform:uppercase;padding:14px 14px 6px}
+#profile-list{flex:1;overflow-y:auto;padding:4px 8px;display:flex;flex-direction:column;gap:2px}
+.profile-item{
+  display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:8px;
+  cursor:pointer;transition:background .1s;font-size:12px;color:var(--tx2);
+}
+.profile-item:hover{background:var(--sf2)}
+.profile-item.sel{background:var(--p-l);color:var(--p);font-weight:500}
+.pi-ind{
+  width:8px;height:8px;border-radius:50%;background:var(--bd);flex-shrink:0;
+}
+.profile-item.active-p .pi-ind{background:var(--g)}
+.pi-lbl{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pi-active-badge{
+  font-size:9px;background:var(--g);color:#fff;border-radius:100px;
+  padding:1px 5px;font-weight:500;flex-shrink:0;
+}
+.sb-addbtn{
+  margin:6px 8px;padding:7px;border:1px dashed var(--bd);border-radius:8px;
+  background:transparent;cursor:pointer;font-size:11px;color:var(--tx3);
+  transition:all .15s;text-align:center;flex-shrink:0;
+}
+.sb-addbtn:hover{border-color:var(--p);color:var(--p)}
+.sb-sep{height:1px;background:var(--bd);margin:4px 0;flex-shrink:0}
+.sb-nav{
+  display:flex;align-items:center;gap:7px;padding:7px 16px;cursor:pointer;
+  font-size:12px;color:var(--tx2);transition:background .1s;flex-shrink:0;
+}
+.sb-nav:hover{background:var(--sf2)}
+.sb-nav.sel{background:var(--p-l);color:var(--p);font-weight:500}
+
+/* Main content */
+#adm-main{overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;background:var(--bg2);scrollbar-width:thin;scrollbar-color:var(--bd) transparent}
+.adm-card{background:var(--bg);border-radius:10px;border:1px solid var(--bd);overflow:hidden;box-shadow:0 1px 3px rgba(60,64,67,.05)}
+.adm-card-hdr{
+  padding:14px 18px;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;gap:12px;
+}
+.adm-card-title{font-size:14px;font-weight:500;color:var(--tx)}
+.adm-card-sub{font-size:11px;color:var(--tx3);margin-top:1px}
+.adm-card-body{padding:14px 18px;display:flex;flex-direction:column;gap:12px}
+
+/* Forms */
+.form-row{display:flex;align-items:center;gap:10px}
+.form-lbl{font-size:12px;font-weight:500;color:var(--tx2);min-width:80px}
+.form-inp{
+  background:var(--bg);border:1px solid var(--bd);border-radius:6px;
+  padding:7px 11px;font-size:12px;color:var(--tx);outline:none;transition:border-color .2s,box-shadow .2s;
+}
+.form-inp:focus{border-color:var(--p);box-shadow:0 0 0 3px var(--p-l)}
+.form-inp::placeholder{color:var(--tx3)}
+.form-inp.url-inp{flex:1;font-family:var(--mono);font-size:11px}
+
+/* Cal list */
+.cal-list{display:flex;flex-direction:column;gap:8px}
+.cal-drag-handle{
+  cursor:grab;padding:0 4px;color:var(--tx3);font-size:16px;line-height:1;
+  user-select:none;flex-shrink:0;
+}
+.cal-drag-handle:active{cursor:grabbing}
+.cal-entry.dragging{opacity:.4;border:2px dashed var(--p)}
+.cal-entry.drag-over{border-top:3px solid var(--p)}
+.cal-entry{
+  background:var(--sf);border-radius:8px;border:1px solid var(--bd);overflow:hidden;
+}
+.cal-entry-main{display:flex;align-items:center;gap:8px;padding:8px 10px}
+.cal-color-wrap{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.cal-color-swatch{
+  width:26px;height:26px;border-radius:50%;border:2px solid var(--bd);
+  cursor:pointer;flex-shrink:0;transition:transform .15s,box-shadow .15s;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+.cal-color-swatch:hover{transform:scale(1.1);box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.cal-color-native{width:0;height:0;padding:0;border:none;opacity:0;position:absolute;pointer-events:none}
+.cal-color-hex{
+  width:80px;background:var(--bg);border:1px solid var(--bd);border-radius:4px;
+  padding:3px 7px;font-size:11px;font-family:var(--mono);color:var(--tx);
+  outline:none;transition:border-color .2s;
+}
+.cal-color-hex:focus{border-color:var(--p)}
+.cal-name-lbl{
+  font-size:11px;font-weight:500;background:var(--bg);border:1px solid var(--bd);
+  border-radius:4px;padding:3px 8px;color:var(--tx2);min-width:90px;max-width:130px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default;
+}
+.cal-name-lbl.auto{color:var(--p);border-color:var(--p-m)}
+.cal-status-row{
+  display:flex;align-items:center;gap:6px;padding:4px 10px 8px;
+  font-size:10px;color:var(--tx3);font-family:var(--mono);
+}
+.cal-status-dot{width:6px;height:6px;border-radius:50%;background:var(--bd);flex-shrink:0}
+.cal-status-dot.ok{background:var(--g)}.cal-status-dot.err{background:var(--r)}.cal-status-dot.loading{background:var(--y)}
+.btn-sm{
+  padding:4px 10px;border-radius:4px;border:1px solid var(--bd);background:var(--bg);
+  font-size:11px;color:var(--tx2);cursor:pointer;white-space:nowrap;transition:all .15s;
+}
+.btn-sm:hover{background:var(--sf);color:var(--p);border-color:var(--p)}
+.btn-sm.del:hover{color:var(--r);border-color:var(--r)}
+.btn-sm.fetch{color:var(--p);border-color:var(--p-m);background:var(--p-l)}
+.btn-sm.fetch:hover{background:var(--p-m)}
+.btn-add-cal{
+  border:1px dashed var(--bd);border-radius:8px;background:transparent;
+  padding:8px;cursor:pointer;font-size:12px;color:var(--tx3);transition:all .15s;text-align:center;
+}
+.btn-add-cal:hover{border-color:var(--p);color:var(--p)}
+.btn-danger-sm{
+  padding:5px 12px;border-radius:4px;border:1px solid var(--bd);background:var(--bg);
+  font-size:11px;color:var(--tx2);cursor:pointer;transition:all .15s;
+}
+.btn-danger-sm:hover{border-color:var(--r);color:var(--r)}
+.btn-prim-sm{
+  padding:5px 12px;border-radius:4px;border:none;background:var(--p);
+  font-size:11px;color:#fff;cursor:pointer;font-weight:500;transition:opacity .15s;
+}
+.btn-prim-sm:hover{opacity:.85}
+.btn-prim-sm.active-badge{background:var(--g)}
+
+/* Settings */
+.settings-row{
+  display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--bd);
+}
+.settings-row:last-child{border-bottom:none}
+.settings-lbl{font-size:13px;font-weight:500;color:var(--tx);min-width:160px}
+.settings-desc{font-size:11px;color:var(--tx3);margin-top:2px}
+.settings-ctl{margin-left:auto}
+.tg-grp{
+  display:flex;background:var(--sf2);border-radius:6px;padding:3px;gap:2px;
+}
+.tg-opt{
+  padding:5px 14px;border-radius:4px;font-size:12px;cursor:pointer;
+  transition:all .15s;color:var(--tx2);user-select:none;
+}
+.tg-opt.on{background:var(--bg);color:var(--p);font-weight:500;box-shadow:0 1px 4px rgba(60,64,67,.12)}
+
+/* PIN */
+#pin-modal{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);
+  backdrop-filter:blur(8px);z-index:200;align-items:center;justify-content:center;
+}
+#pin-modal.open{display:flex}
+.pin-box{
+  background:var(--bg3);border-radius:16px;padding:28px 32px;
+  width:min(340px,90vw);display:flex;flex-direction:column;gap:14px;
+  box-shadow:var(--shadow-lg);border:1px solid var(--bd);
+}
+.pin-title{font-size:18px;font-weight:500;color:var(--tx)}
+.pin-sub{font-size:13px;color:var(--tx2)}
+.pin-inp{text-align:center;font-size:22px;letter-spacing:.3em;width:100%}
+.pin-err{font-size:12px;color:var(--r);text-align:center;min-height:18px}
+.pin-acts{display:flex;gap:8px;justify-content:flex-end}
+
+/* Profile switch modal */
+#switch-modal{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
+  backdrop-filter:blur(6px);z-index:190;align-items:center;justify-content:center;
+}
+#switch-modal.open{display:flex}
+.switch-box{
+  background:var(--bg3);border-radius:14px;padding:24px;
+  width:min(320px,90vw);display:flex;flex-direction:column;gap:10px;
+  box-shadow:var(--shadow-lg);border:1px solid var(--bd);
+}
+.switch-title{font-size:15px;font-weight:500;color:var(--tx)}
+.switch-list{display:flex;flex-direction:column;gap:4px}
+.switch-item{
+  display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;
+  cursor:pointer;transition:background .1s;font-size:13px;color:var(--tx2);
+}
+.switch-item:hover{background:var(--sf2)}
+.switch-item.cur{background:var(--p-l);color:var(--p);font-weight:500}
+.switch-dot{width:8px;height:8px;border-radius:50%;background:var(--bd);flex-shrink:0}
+.switch-item.cur .switch-dot{background:var(--p)}
+
+[data-theme="dark"] .month-grid{border-color:#707070}
+[data-theme="dark"] .cal-week{border-bottom-color:#606060}
+[data-theme="dark"] .mcell{border-right-color:#606060}
+[data-theme="dark"] .cal-header{border-bottom-color:#707070;background:#2f2f2f}
+[data-theme="dark"] .month-dow{background:#2f2f2f}
+[data-theme="dark"] #sig-left{border-right-color:#606060}
+[data-theme="dark"] #sig-hdr{border-bottom-color:#606060}
+[data-theme="dark"] #today-hero{border-bottom-color:#606060}
+[data-theme="dark"] .ev-item{border-color:#555;background:#252525}
+[data-theme="dark"] .ui{border-color:#555;background:#252525}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ SIGNAGE ═══════════════ -->
+<div id="signage" class="view on">
+  <div id="sig-hdr">
+    <div id="sig-clock">00:00<em>:00</em></div>
+    <div id="sig-dateinfo">
+      <div id="sig-date">—</div>
+      <div id="sig-dow">—</div>
+    </div>
+    <div class="sig-hr">
+      <div class="status-pill"><div class="sdot" id="sdot"></div><span id="stxt">起動中</span></div>
+      <div class="profile-pill" id="profile-pill" onclick="openSwitchModal()">
+        <span id="pname-pill">—</span><span style="font-size:10px;opacity:.6">▾</span>
+      </div>
+      <button class="icon-btn" onclick="openAdminPin()" title="管理パネル">⚙</button>
+    </div>
+  </div>
+  <div id="sig-body" style="display:contents">
+    <div id="sig-left">
+      <div class="plbl">TODAY</div>
+      <div id="today-hero">
+        <div id="today-num">—</div>
+        <div id="today-meta"><div id="today-month">—</div><div id="today-year">—</div></div>
+      </div>
+      <div id="ev-list-scroll"></div>
+    </div>
+    <div id="sig-right">
+      <div id="sig-month">
+        <div id="month-hdr"><span id="month-title">—</span><span id="month-year"></span></div>
+        <div class="month-grid" id="month-grid"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ ADMIN ═══════════════ -->
+<div id="admin" class="view">
+  <div id="adm-hdr">
+    <div class="adm-logo">📅 <span>カレンダーサイネージ 管理パネル</span></div>
+    <div class="adm-hr">
+      <button class="btn-out" id="btn-fetch-all" onclick="adminFetchAll()">🔄 全カレンダー取得</button>
+      <button class="btn-out" onclick="switchView('signage')">← サイネージへ</button>
+    </div>
+  </div>
+  <div id="adm-body">
+    <div id="adm-sidebar">
+      <div class="sb-sec">プロファイル</div>
+      <div id="profile-list"></div>
+      <button class="sb-addbtn" onclick="createProfile()">＋ 新規プロファイル</button>
+      <div class="sb-sep"></div>
+      <div class="sb-nav" id="nav-settings" onclick="showAdminTab('settings')">⚙ グローバル設定</div>
+    </div>
+    <div id="adm-main">
+      <!-- Profile editor -->
+      <div id="adm-pe">
+        <div class="adm-card">
+          <div class="adm-card-hdr">
+            <div><div class="adm-card-title">プロファイル設定</div><div class="adm-card-sub">このプロファイルの名前を変更できます</div></div>
+            <div style="display:flex;gap:6px;margin-left:auto">
+              <button class="btn-danger-sm" onclick="deleteProfile()">削除</button>
+              <button class="btn-prim-sm" id="btn-activate" onclick="activateProfile()">✓ アクティブ</button>
+            </div>
+          </div>
+          <div class="adm-card-body">
+            <div class="form-row">
+              <span class="form-lbl">プロファイル名</span>
+              <input id="pe-name" class="form-inp" style="flex:1" placeholder="例：フロアA サイネージ">
+            </div>
+          </div>
+        </div>
+        <div class="adm-card">
+          <div class="adm-card-hdr">
+            <div><div class="adm-card-title">カレンダー一覧</div><div class="adm-card-sub">iCal URL を追加、自動でカレンダー名を取得します</div></div>
+          </div>
+          <div class="adm-card-body">
+            <div class="cal-list" id="cal-list"></div>
+            <button class="btn-add-cal" onclick="addCalRow()">＋ カレンダーを追加</button>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;padding-bottom:8px">
+          <button class="btn-prim" onclick="saveProfile()">💾 プロファイルを保存</button>
+        </div>
+      </div>
+      <!-- Settings -->
+      <div id="adm-settings" style="display:none">
+        <div class="adm-card">
+          <div class="adm-card-hdr"><div class="adm-card-title">表示・動作設定</div></div>
+          <div class="adm-card-body">
+            <div class="settings-row">
+              <div><div class="settings-lbl">テーマ</div><div class="settings-desc">サイネージの表示テーマ</div></div>
+              <div class="settings-ctl tg-grp" id="theme-tg">
+                <div class="tg-opt" data-v="light" onclick="setTheme('light')">☀ ライト</div>
+                <div class="tg-opt" data-v="dark" onclick="setTheme('dark')">🌙 ダーク</div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div><div class="settings-lbl">自動更新間隔</div><div class="settings-desc">カレンダーデータの再取得間隔</div></div>
+              <div class="settings-ctl">
+                <select id="refresh-sel" class="form-inp" onchange="S.settings.refreshMin=+this.value;saveState();resetRefreshTimer()">
+                  <option value="1">1分</option><option value="3">3分</option>
+                  <option value="5">5分</option><option value="10">10分</option><option value="30">30分</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="adm-card">
+          <div class="adm-card-hdr"><div class="adm-card-title">API・招待リンク</div></div>
+          <div class="adm-card-body">
+            <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:8px">
+              <div><div class="settings-lbl">Worker API の URL</div><div class="settings-desc">meta タグまたは下記（この端末のみ保存）</div></div>
+              <input id="api-base-inp" class="form-inp" style="width:100%" placeholder="http://127.0.0.1:8787">
+            </div>
+            <div class="settings-row" style="flex-direction:column;align-items:stretch;gap:8px;border-bottom:none;padding-top:0">
+              <div><div class="settings-lbl">サイネージ用リンク</div><div class="settings-desc">各招待 ID はプロファイルに紐づきます。URL をコピーしてクライアント端末で開きます。</div></div>
+              <div id="invite-list" style="font-size:12px;color:var(--tx2);display:flex;flex-direction:column;gap:8px"></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button type="button" class="btn-out" onclick="addInviteForEditingProfile()">＋ このプロファイル用の招待を追加</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn-prim" onclick="saveSettings()">💾 設定を保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PIN Modal -->
+<div id="pin-modal">
+  <div class="pin-box">
+    <div class="pin-title">🔐 管理パネル</div>
+    <div class="pin-sub">Worker の HOST_SECRET（<code style="font-size:11px">Authorization: Bearer</code> と同じ値）を入力</div>
+    <input id="pin-in" class="form-inp pin-inp" type="password" maxlength="256" placeholder="HOST_SECRET"
+      style="font-size:22px;text-align:center;letter-spacing:.3em"
+      onkeydown="if(event.key==='Enter')submitPin()">
+    <div id="pin-err" class="pin-err"></div>
+    <div class="pin-acts">
+      <button class="btn-out" onclick="closePinModal()">キャンセル</button>
+      <button class="btn-prim" onclick="submitPin()">ログイン</button>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Switch Modal -->
+<div id="switch-modal">
+  <div class="switch-box">
+    <div class="switch-title">プロファイルを切り替え</div>
+    <div class="switch-list" id="switch-list"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:4px">
+      <button class="btn-out" onclick="closeSwitchModal()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  CONSTANTS
+// ══════════════════════════════════════════════
+const SK = 'signage_v3';
+const HOST_TOKEN_KEY = 'signage_host_token';
+const API_BASE_LS = 'signage_api_base';
+const params = new URLSearchParams(location.search);
+const CLIENT_INVITE = params.get('invite')?.trim() || null;
+const IS_CLIENT_MODE = !!CLIENT_INVITE;
+const GC_COLORS = ['#1a73e8','#d50000','#e67c73','#f4511e','#f6bf26','#0b8043','#33b679','#039be5','#3f51b5','#7986cb','#8e24aa','#616161'];
+const WK_JA = ['日','月','火','水','木','金','土'];
+const MN_JA = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const MN_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MN_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+const DEFAULT_STATE = {
+  activeProfileId: 'p1',
+  profiles: [{id:'p1', name:'メインサイネージ', calendars:[]}],
+  settings: {theme:'light', refreshMin:5},
+  version: 1,
+  displays: []
+};
+
+let S = {...DEFAULT_STATE};
+
+function getApiBase() {
+  const meta = document.querySelector('meta[name="calendar-api-base"]')?.getAttribute('content')?.trim();
+  if (meta) return meta.replace(/\/$/, '');
+  try {
+    const ls = localStorage.getItem(API_BASE_LS)?.trim();
+    if (ls) return ls.replace(/\/$/, '');
+  } catch (_) {}
+  return '';
+}
+
+function getHostToken() {
+  try { return sessionStorage.getItem(HOST_TOKEN_KEY) || ''; } catch { return ''; }
+}
+function setHostToken(t) {
+  try { sessionStorage.setItem(HOST_TOKEN_KEY, t); } catch (_) {}
+}
+
+async function api(path, opts = {}) {
+  const base = getApiBase();
+  if (!base) throw new Error('API の URL が未設定です（meta または管理画面の Worker URL）');
+  const url = base + path;
+  const headers = { ...(opts.headers || {}) };
+  let body = opts.body;
+  if (body != null && typeof body === 'object' && !(body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+    body = JSON.stringify(body);
+  }
+  const token = getHostToken();
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(url, { ...opts, headers, body });
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = { raw: text }; }
+  if (!res.ok) throw new Error((data && data.error) || text || res.statusText);
+  return data;
+}
+
+async function loadTenant() {
+  const data = await api('/api/host/tenant');
+  S = data;
+}
+
+async function syncTenant() {
+  const data = await api('/api/host/tenant', { method: 'PUT', body: S });
+  S = data;
+}
+
+function wireToEvents(arr) {
+  return (arr || []).map(e => ({
+    uid: e.uid,
+    title: e.title,
+    start: new Date(e.start),
+    end: new Date(e.end),
+    allDay: e.allDay,
+    loc: e.loc || '',
+    color: e.color,
+    calName: e.calName,
+    rrule: null
+  }));
+}
+
+let events = [];
+let calStatuses = {}; // {calId: {ok, msg, count}}
+let editingProfileId = null;
+let refreshTimer = null;
+let currentView = 'signage';
+
+function saveState() { /* 設定のソースは Worker（localStorage にプロファイルは保存しない） */ }
+
+// ══════════════════════════════════════════════
+//  THEME
+// ══════════════════════════════════════════════
+function setTheme(t) {
+  S.settings.theme = t;
+  document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : '');
+  document.querySelectorAll('.tg-opt').forEach(el => el.classList.toggle('on', el.dataset.v === t));
+  saveState();
+}
+setTheme(S.settings.theme);
+
+// ══════════════════════════════════════════════
+//  VIEW SWITCHING
+// ══════════════════════════════════════════════
+function switchView(v) {
+  currentView = v;
+  document.querySelectorAll(".view").forEach(el => el.classList.remove("on"));
+  const target = document.getElementById(v);
+  if (!target) { console.error("View not found:", v); return; }
+  target.classList.add("on");
+  if (v === "admin") { showAdminTab("profile"); renderAdmin(); }
+  if (v === "signage") renderSignage();
+}
+
+// ══════════════════════════════════════════════
+//  CLOCK
+// ══════════════════════════════════════════════
+(function tick() {
+  const n = new Date(), p = v => String(v).padStart(2,'0');
+  document.getElementById('sig-clock').innerHTML = `${p(n.getHours())}:${p(n.getMinutes())}<em>:${p(n.getSeconds())}</em>`;
+  document.getElementById('sig-date').textContent = `${n.getFullYear()}.${p(n.getMonth()+1)}.${p(n.getDate())}`;
+  document.getElementById('sig-dow').textContent = `${WK_JA[n.getDay()]}曜日`;
+  setTimeout(tick, 1000);
+})();
+
+// ══════════════════════════════════════════════
+//  FETCH（Worker API のみ）
+// ══════════════════════════════════════════════
+async function fetchAllCalendars() {
+  const base = getApiBase();
+  if (!base) { setStatus('API URL 未設定', 'err'); return; }
+
+  if (IS_CLIENT_MODE) {
+    setStatus('取得中...', 'loading');
+    try {
+      const res = await fetch(base + '/api/public/events?invite=' + encodeURIComponent(CLIENT_INVITE));
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || res.statusText);
+      if (data.settings?.theme) setTheme(data.settings.theme);
+      S.settings = { ...S.settings, ...data.settings };
+      events = wireToEvents(data.events || []);
+      calStatuses = {};
+      (data.calendars || []).forEach(c => { calStatuses[c.id] = { ok: c.ok, msg: c.msg, count: c.count }; });
+      window.__clientProfileName = data.profileName;
+      setStatus(events.length ? `LIVE · ${events.length}件` : '予定なし', events.length ? 'ok' : 'warn');
+      renderSignage();
+    } catch (e) {
+      console.warn(e);
+      setStatus('エラー', 'err');
+    }
+    return;
+  }
+
+  const token = getHostToken();
+  if (!token) { setStatus('ホスト未ログイン', 'warn'); return; }
+  const profile = S.profiles.find(p => p.id === S.activeProfileId);
+  if (!profile || !profile.calendars.length) { setStatus('カレンダーなし', 'warn'); return; }
+  setStatus('取得中...', 'loading');
+  try {
+    const data = await api('/api/host/events?profileId=' + encodeURIComponent(profile.id));
+    events = wireToEvents(data.events || []);
+    calStatuses = {};
+    (data.calendars || []).forEach(c => { calStatuses[c.id] = { ok: c.ok, msg: c.msg, count: c.count }; });
+    setStatus(events.length ? `LIVE · ${events.length}件` : '予定なし', events.length ? 'ok' : 'warn');
+    renderSignage();
+  } catch (e) {
+    console.warn(e);
+    setStatus('エラー', 'err');
+  }
+}
+
+function setStatus(msg, state) {
+  document.getElementById('stxt').textContent = msg;
+  const d = document.getElementById('sdot');
+  d.className = 'sdot' + (state==='err'?' err':state==='loading'?' loading':'');
+}
+
+// ══════════════════════════════════════════════
+//  RENDER SIGNAGE
+// ══════════════════════════════════════════════
+function renderSignage() {
+  const profile = S.profiles.find(p=>p.id===S.activeProfileId) || S.profiles[0];
+  const label = IS_CLIENT_MODE && window.__clientProfileName ? window.__clientProfileName : (profile ? profile.name : '—');
+  document.getElementById('pname-pill').textContent = label;
+  renderDayView();
+  renderMonthGrid();
+}
+
+function dayStart(d) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
+function dk(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function p2(v) { return String(v).padStart(2,'0'); }
+function esc(s='') { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s='') { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
+function hexToRgb(h) {
+  const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);
+  return `${r},${g},${b}`;
+}
+
+/* ─ Event List (left panel) — today + next days ─ */
+function renderDayView() {
+  const now = new Date();
+  document.getElementById('today-num').textContent = now.getDate();
+  document.getElementById('today-month').textContent = MN_JA[now.getMonth()];
+  document.getElementById('today-year').textContent = now.getFullYear();
+
+  const scroll = document.getElementById('ev-list-scroll');
+  let html = '';
+
+  // Helper: get events for a given calendar-day
+  function getEventsForDay(targetDate) {
+    const targetKey = dk(targetDate);
+    return events.filter(ev => {
+      if (ev.allDay) {
+        const endInclusive = new Date(ev.end.getTime() - 1);
+        return dk(ev.start) <= targetKey && dk(endInclusive) >= targetKey;
+      }
+      return dk(ev.start) === targetKey;
+    }).sort((a,b) => {
+      if (a.allDay && !b.allDay) return -1;
+      if (!a.allDay && b.allDay) return 1;
+      return a.start - b.start;
+    });
+  }
+
+  // Helper: render events for a day (returns HTML string)
+  function renderEvItems(dayEvs, isToday) {
+    let out = '';
+    const allDay = dayEvs.filter(e => e.allDay);
+    const timed  = dayEvs.filter(e => !e.allDay);
+
+    if (allDay.length) {
+      out += '<div class="ev-group" style="margin-bottom:4px"><div class="ev-group-label">終日</div>';
+      allDay.forEach(ev => {
+        out += `<div class="ev-item allday">
+          <div class="ev-item-stripe" style="background:${ev.color}"></div>
+          <div class="ev-item-body">
+            <div class="ev-item-title">${esc(ev.title)}</div>
+            <div class="ev-item-cal"><div class="ev-item-cal-dot" style="background:${ev.color}"></div>${esc(ev.calName||'')}</div>
+          </div>
+        </div>`;
+      });
+      out += '</div>';
+    }
+
+    if (timed.length) {
+      const mt = allDay.length ? ' style="margin-top:10px"' : '';
+      out += `<div class="ev-group"${mt}>`;
+      if (allDay.length) out += '<div class="ev-group-label">予定</div>';
+      timed.forEach(ev => {
+        const sh=ev.start.getHours(), sm=ev.start.getMinutes();
+        const eh=ev.end.getHours(),   em=ev.end.getMinutes();
+        const timeStr = `${p2(sh)}:${p2(sm)} – ${p2(eh)}:${p2(em)}`;
+        const isCur = isToday && ev.start <= now && ev.end > now;
+        out += `<div class="ev-item${isCur?' current':''}">
+          <div class="ev-item-stripe" style="background:${ev.color}"></div>
+          <div class="ev-item-body">
+            <div class="ev-item-title">${esc(ev.title)}</div>
+            <div class="ev-item-time">${timeStr}</div>
+            <div class="ev-item-cal"><div class="ev-item-cal-dot" style="background:${ev.color}"></div>${esc(ev.calName||'')}</div>
+          </div>
+        </div>`;
+      });
+      out += '</div>';
+    }
+    return out;
+  }
+
+  // ── Today ──
+  const todayEvs = getEventsForDay(now);
+  if (todayEvs.length) {
+    html += renderEvItems(todayEvs, true);
+  } else {
+    html += '<div class="ev-empty">今日の予定はありません</div>';
+  }
+
+  // ── Next days (show up to 7 days ahead, skip empty days) ──
+  let daysShown = 0;
+  for (let offset = 1; offset <= 14 && daysShown < 7; offset++) {
+    const d = new Date(now);
+    d.setDate(d.getDate() + offset);
+    d.setHours(0,0,0,0);
+    const dayEvs = getEventsForDay(d);
+    if (!dayEvs.length) continue;
+    daysShown++;
+
+    const dow = WK_JA[d.getDay()];
+    const dateStr = `${d.getFullYear()}.${p2(d.getMonth()+1)}.${p2(d.getDate())}`;
+    const tagHtml = offset === 1
+      ? `<span class="ev-day-sep-tag tom">明日</span>`
+      : offset <= 3
+        ? `<span class="ev-day-sep-tag soon">${offset}日後</span>`
+        : '';
+
+    html += `<div class="ev-day-sep-line"></div>
+      <div class="ev-day-sep">
+        <div class="ev-day-sep-num">${d.getDate()}</div>
+        <div class="ev-day-sep-meta">
+          <div class="ev-day-sep-dow">${dow}曜日</div>
+          <div class="ev-day-sep-date">${dateStr}</div>
+        </div>
+        ${tagHtml}
+      </div>`;
+    html += renderEvItems(dayEvs, false);
+  }
+
+  scroll.innerHTML = html;
+}
+
+function isLightColor(hex) {
+  if (!hex || hex.length<7) return false;
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return (r*299+g*587+b*114)/1000 > 160;
+}
+
+/* ─ 5-Week Rolling Grid: spanning event bars ─ */
+function renderMonthGrid() {
+  const now = new Date();
+  const todayKey = dk(now);
+
+  // Week grid starts on Sunday of current week
+  const todayDow = now.getDay();
+  const weekStart = new Date(now);
+  weekStart.setHours(0,0,0,0);
+  weekStart.setDate(weekStart.getDate() - todayDow);
+
+  const gridEnd = new Date(weekStart);
+  gridEnd.setDate(gridEnd.getDate() + 35);
+
+  // Header title
+  const sm = weekStart.getMonth(), em = new Date(gridEnd.getTime()-1).getMonth();
+  const sy = weekStart.getFullYear(), ey = new Date(gridEnd.getTime()-1).getFullYear();
+  document.getElementById('month-title').textContent =
+    sm === em ? MN_FULL[sm] : MN_JA[sm] + ' – ' + MN_JA[em];
+  document.getElementById('month-year').textContent =
+    sy !== ey ? sy + ' / ' + ey : sy;
+
+  // Helper: last calendar-day an event occupies
+  function evLastDay(ev) {
+    if (ev.allDay) {
+      // iCal all-day end is exclusive
+      const d = new Date(ev.end.getTime() - 86400000);
+      d.setHours(0,0,0,0); return d;
+    }
+    // timed: the start-of-day of the end time
+    return dayStart(ev.end);
+  }
+
+  // Build container HTML
+  const mg = document.getElementById('month-grid');
+
+  // Day-of-week header
+  let html = '<div class="cal-header">' +
+    WK_JA.map((d,i) =>
+      `<div class="month-dow${i===0?' sun':i===6?' sat':''}">${d}</div>`
+    ).join('') + '</div>';
+
+  const MAX_LANES = 99; // no limit - show all
+
+  for (let w = 0; w < 5; w++) {
+    const wS = new Date(weekStart); wS.setDate(wS.getDate() + w * 7);
+    const wE = new Date(wS);        wE.setDate(wE.getDate() + 7);  // exclusive
+
+    // ── Day number cells ──
+    let dnHtml = '';
+    for (let d = 0; d < 7; d++) {
+      const cd = new Date(wS); cd.setDate(cd.getDate() + d);
+      const isToday = dk(cd) === todayKey;
+      const dow = cd.getDay();
+      const cls = ['mcell', isToday?'today':'', dow===0?'sun':'', dow===6?'sat':'']
+                    .filter(Boolean).join(' ');
+      dnHtml += `<div class="${cls}"><div class="mdn">${cd.getDate()}</div></div>`;
+    }
+
+    // ── Collect events that overlap this week ──
+    // Deduplicate by uid (recurring events have different uids, keep all)
+    const weekEvs = [];
+    const seenUid = new Set();
+    events.forEach(ev => {
+      const evS = dayStart(ev.start);
+      const evE = evLastDay(ev);
+      // overlaps week?
+      if (evE < wS || evS >= wE) return;
+      // dedupe by uid within this week pass (uid might be unique per occurrence already)
+      const wKey = ev.uid + '_w' + w;
+      if (seenUid.has(wKey)) return;
+      seenUid.add(wKey);
+
+      // Column positions (0-based within this week, 0=Sun of this week)
+      const clampedS = evS < wS ? wS : evS;
+      const clampedE = evE >= wE ? new Date(wE.getTime()-86400000) : evE;
+      const colStart = clampedS.getDay(); // 0-6
+      const colEnd   = clampedE.getDay(); // 0-6
+      const span     = colEnd - colStart + 1;
+
+      // Does label show? Only if this is actual start (not continuation from prev week)
+      const showLabel = evS >= wS;
+
+      weekEvs.push({ ev, colStart, span, showLabel,
+        isMultiDay: (evE - evS) >= 86400000 });
+    });
+
+    // Sort: multi-day (long first) → single day, then by start time
+    weekEvs.sort((a,b) => {
+      if (a.span !== b.span) return b.span - a.span;
+      return a.ev.start - b.ev.start;
+    });
+
+    // ── Lane assignment ──
+    // laneEnd[l] = next free column start for lane l
+    const laneEnd = [];
+    const assigned = weekEvs.map(({colStart, span}) => {
+      for (let l = 0; l < MAX_LANES; l++) {
+        if ((laneEnd[l] === undefined) || laneEnd[l] <= colStart) {
+          laneEnd[l] = colStart + span;
+          return l;
+        }
+      }
+      return -1; // overflow
+    });
+
+    // ── Build lane rows ──
+    // lanes[l] = array of {colStart, span, ev, showLabel}
+    const lanes = {};
+    weekEvs.forEach((item, i) => {
+      const l = assigned[i];
+      if (l < 0) return;
+      (lanes[l] = lanes[l] || []).push(item);
+    });
+
+    // No overflow - all events shown
+    const overflow = {};
+
+    const maxLane = Math.max(-1, ...Object.keys(lanes).map(Number));
+    let laneHtml = '<div class="cal-evrows">';
+
+    for (let l = 0; l <= maxLane; l++) {
+      laneHtml += '<div class="cal-evrow">';
+      (lanes[l] || []).forEach(({ev, colStart, span, showLabel}) => {
+        // Rounded corners: left if event starts on this week, right if it ends
+        const evS = dayStart(ev.start);
+        const evE = evLastDay(ev);
+        const roundL = evS >= wS ? '4px' : '0';
+        const roundR = evE < wE  ? '4px' : '0';
+        const br = `${roundL} ${roundR} ${roundR} ${roundL}`;
+        // Opacity for continuation bars (no label)
+        const opacity = showLabel ? '1' : '0.85';
+        const label = showLabel ? esc(ev.title) : '';
+        laneHtml += `<div class="mspan"
+          style="grid-column:${colStart+1}/span ${span};background:${ev.color};border-radius:${br};opacity:${opacity}"
+          title="${esc(ev.title)}">${label}</div>`;
+      });
+      laneHtml += '</div>';
+    }
+
+    // Overflow row
+    if (Object.keys(overflow).length > 0) {
+      laneHtml += '<div class="cal-evrow cal-overflow">';
+      for (let c = 0; c < 7; c++) {
+        if (overflow[c]) {
+          laneHtml += `<div class="mover" style="grid-column:${c+1}">+${overflow[c]}</div>`;
+        }
+      }
+      laneHtml += '</div>';
+    }
+
+    laneHtml += '</div>'; // cal-evrows
+
+    html += `<div class="cal-week">
+      <div class="cal-dnums">${dnHtml}</div>
+      ${laneHtml}
+    </div>`;
+  }
+
+  mg.innerHTML = html;
+}
+
+
+// ══════════════════════════════════════════════
+//  ADMIN PANEL
+// ══════════════════════════════════════════════
+function copyText(t) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(t).then(() => alert('コピーしました')).catch(() => window.prompt('コピー', t));
+  } else window.prompt('コピー', t);
+}
+
+function renderInviteList() {
+  const el = document.getElementById('invite-list');
+  if (!el) return;
+  const base = location.origin + location.pathname;
+  const list = S.displays || [];
+  el.innerHTML = list.map(d => {
+    const href = base + '?invite=' + encodeURIComponent(d.inviteId);
+    const prof = S.profiles.find(p => p.id === d.profileId);
+    const pname = prof ? prof.name : d.profileId;
+    const canDel = list.length > 1;
+    return '<div style="border:1px solid var(--bd);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:4px">' +
+      '<div><strong>' + esc(pname) + '</strong> <span style="opacity:.7;font-family:var(--mono);font-size:10px">' + esc(d.inviteId.slice(0, 10)) + '…</span></div>' +
+      '<input readonly class="form-inp" style="font-size:11px" value="' + escAttr(href) + '">' +
+      '<div style="display:flex;gap:6px">' +
+      '<button type="button" class="btn-sm fetch" data-copy="' + escAttr(href) + '" onclick="copyText(this.dataset.copy)">コピー</button>' +
+      (canDel ? '<button type="button" class="btn-sm del" data-invite="' + escAttr(d.inviteId) + '" onclick="deleteInvite(this.dataset.invite)">削除</button>' : '') +
+      '</div></div>';
+  }).join('') || '<div class="empty-msg">招待がありません</div>';
+}
+
+async function addInviteForEditingProfile() {
+  const pid = editingProfileId;
+  if (!pid) return;
+  try {
+    await api('/api/host/displays', { method: 'POST', body: { profileId: pid } });
+    await loadTenant();
+    renderInviteList();
+    alert('招待リンクを追加しました');
+  } catch (e) { alert(e.message); }
+}
+
+async function deleteInvite(inviteId) {
+  if (!confirm('この招待リンクを無効化しますか？')) return;
+  try {
+    await api('/api/host/displays/' + encodeURIComponent(inviteId), { method: 'DELETE' });
+    await loadTenant();
+    renderInviteList();
+  } catch (e) { alert(e.message); }
+}
+
+function renderAdmin() {
+  renderProfileList();
+  const ep = S.profiles.find(p=>p.id===editingProfileId) || S.profiles[0];
+  if(ep){ editingProfileId=ep.id; renderProfileEditor(ep); }
+  document.querySelectorAll('#theme-tg .tg-opt').forEach(el=>el.classList.toggle('on',el.dataset.v===S.settings.theme));
+  const rs=document.getElementById('refresh-sel');
+  if(rs) rs.value=String(S.settings.refreshMin);
+  const apiBase = document.getElementById('api-base-inp');
+  if (apiBase) {
+    apiBase.value = getApiBase();
+    apiBase.onchange = () => {
+      const v = apiBase.value.trim().replace(/\/$/, '');
+      try { localStorage.setItem(API_BASE_LS, v); } catch (_) {}
+    };
+  }
+  renderInviteList();
+}
+
+function renderProfileList() {
+  const list = document.getElementById('profile-list');
+  list.innerHTML = S.profiles.map(p => `
+    <div class="profile-item${p.id===editingProfileId?' sel':''}${p.id===S.activeProfileId?' active-p':''}"
+      onclick="selectProfile('${p.id}')">
+      <div class="pi-ind"></div>
+      <span class="pi-lbl">${esc(p.name)}</span>
+      ${p.id===S.activeProfileId?'<span class="pi-active-badge">表示中</span>':''}
+    </div>`
+  ).join('');
+}
+
+function selectProfile(id) {
+  editingProfileId = id;
+  showAdminTab('profile');
+  const p = S.profiles.find(x=>x.id===id);
+  if(p) renderProfileEditor(p);
+  renderProfileList();
+}
+
+function showAdminTab(tab) {
+  document.getElementById('adm-pe').style.display = tab==='profile'?'flex':'none';
+  document.getElementById('adm-settings').style.display = tab==='settings'?'flex':'none';
+  document.getElementById('adm-pe').style.flexDirection = 'column';
+  document.getElementById('adm-pe').style.gap = '16px';
+  document.querySelectorAll('.sb-nav').forEach(el=>el.classList.remove('sel'));
+  if(tab==='settings') document.getElementById('nav-settings').classList.add('sel');
+}
+
+function renderProfileEditor(p) {
+  document.getElementById('pe-name').value = p.name;
+  const isActive = p.id === S.activeProfileId;
+  const btn = document.getElementById('btn-activate');
+  btn.textContent = isActive ? '✓ アクティブ（表示中）' : '▷ アクティブにする';
+  btn.className = 'btn-prim-sm' + (isActive?' active-badge':'');
+
+  const cl = document.getElementById('cal-list');
+  if(!p.calendars.length) {
+    cl.innerHTML='<div class="empty-msg" style="padding:8px">カレンダーがありません。下のボタンで追加してください。</div>';
+    return;
+  }
+  cl.innerHTML = p.calendars.map(cal => `
+    <div class="cal-entry" id="cae-${cal.id}" draggable="true"
+      ondragstart="calDragStart(event,'${p.id}','${cal.id}')"
+      ondragover="calDragOver(event,'${p.id}','${cal.id}')"
+      ondragleave="calDragLeave(event)"
+      ondrop="calDrop(event,'${p.id}','${cal.id}')"
+      ondragend="calDragEnd()">
+      <div class="cal-entry-main">
+        <span class="cal-drag-handle" title="ドラッグして並べ替え">⠿</span>
+        <div class="cal-color-wrap">
+          <div class="cal-color-swatch" id="cswatch-${cal.id}"
+            style="background:${cal.color}"
+            onclick="document.getElementById('cnative-${cal.id}').click()"
+            title="クリックまたはHEX入力で色を変更">
+          </div>
+          <input type="color" class="cal-color-native" id="cnative-${cal.id}"
+            value="${cal.color}"
+            oninput="onColorNative('${p.id}','${cal.id}',this.value)">
+          <input class="cal-color-hex" id="chex-${cal.id}"
+            value="${cal.color}"
+            placeholder="#1a73e8"
+            maxlength="7"
+            oninput="onColorHex('${p.id}','${cal.id}',this.value)"
+            title="HEXカラーコード（例: #1a73e8）">
+        </div>
+        <span class="cal-name-lbl${cal.autoName?' auto':''}" id="cname-${cal.id}" title="${esc(cal.name||'')}">
+          ${esc(cal.name||'名前未設定')}
+        </span>
+        <input class="form-inp url-inp" placeholder="iCal URL (https:// or webcal://)"
+          value="${esc(cal.url||'')}"
+          oninput="updateCalField('${p.id}','${cal.id}','url',this.value)"
+          id="curl-${cal.id}">
+        <button class="btn-sm fetch" onclick="fetchOneCal('${p.id}','${cal.id}')">取得</button>
+        <button class="btn-sm del" onclick="removeCalEntry('${p.id}','${cal.id}')">✕</button>
+      </div>
+      <div class="cal-status-row" id="cstat-${cal.id}">
+        <div class="cal-status-dot${calStatuses[cal.id]?calStatuses[cal.id].ok?' ok':' err':''}"></div>
+        <span>${calStatuses[cal.id]?calStatuses[cal.id].msg:'未取得'}</span>
+      </div>
+    </div>`
+  ).join('');
+}
+
+// ── Color helpers ──
+function onColorNative(pid, calId, val) {
+  updateCalField(pid, calId, 'color', val);
+  const hex = document.getElementById('chex-'+calId);
+  const sw  = document.getElementById('cswatch-'+calId);
+  if(hex) hex.value = val;
+  if(sw)  sw.style.background = val;
+}
+function onColorHex(pid, calId, val) {
+  const clean = val.trim();
+  const sw = document.getElementById('cswatch-'+calId);
+  const native = document.getElementById('cnative-'+calId);
+  if(/^#[0-9a-fA-F]{6}$/.test(clean)) {
+    updateCalField(pid, calId, 'color', clean);
+    if(sw)     sw.style.background = clean;
+    if(native) native.value = clean;
+  }
+}
+
+// ── Drag-to-reorder ──
+let _dragId = null, _dragPid = null;
+function calDragStart(e, pid, calId) {
+  _dragId = calId; _dragPid = pid;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function calDragOver(e, pid, calId) {
+  if(calId === _dragId) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.cal-entry').forEach(el => el.classList.remove('drag-over'));
+  e.currentTarget.classList.add('drag-over');
+}
+function calDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+function calDrop(e, pid, calId) {
+  e.preventDefault();
+  if(calId === _dragId) return;
+  const p = S.profiles.find(x=>x.id===pid);
+  if(!p) return;
+  const fromIdx = p.calendars.findIndex(c=>c.id===_dragId);
+  const toIdx   = p.calendars.findIndex(c=>c.id===calId);
+  if(fromIdx<0||toIdx<0) return;
+  const [moved] = p.calendars.splice(fromIdx,1);
+  p.calendars.splice(toIdx,0,moved);
+  saveState();
+  renderProfileEditor(p);
+}
+function calDragEnd() {
+  _dragId = null; _dragPid = null;
+  document.querySelectorAll('.cal-entry').forEach(el => {
+    el.classList.remove('dragging','drag-over');
+  });
+}
+
+function updateCalField(pid, calId, field, val) {
+  const p = S.profiles.find(x=>x.id===pid);
+  if(!p) return;
+  const c = p.calendars.find(x=>x.id===calId);
+  if(!c) return;
+  c[field] = val;
+}
+
+function addCalRow() {
+  const p = S.profiles.find(x=>x.id===editingProfileId);
+  if(!p) return;
+  const id = 'c'+Date.now();
+  p.calendars.push({id, url:'', name:'', color: GC_COLORS[p.calendars.length % GC_COLORS.length], autoName:false});
+  saveState();
+  renderProfileEditor(p);
+}
+
+function removeCalEntry(pid, calId) {
+  const p = S.profiles.find(x=>x.id===pid);
+  if(!p) return;
+  p.calendars = p.calendars.filter(c=>c.id!==calId);
+  saveState(); renderProfileEditor(p);
+}
+
+async function fetchOneCal(pid, calId) {
+  if (IS_CLIENT_MODE) return;
+  const p = S.profiles.find(x=>x.id===pid);
+  if(!p) return;
+  const cal = p.calendars.find(c=>c.id===calId);
+  if(!cal||!cal.url) { alert('URLを入力してください'); return; }
+
+  const statEl = document.getElementById('cstat-'+calId);
+  const nameEl = document.getElementById('cname-'+calId);
+  if(statEl) statEl.innerHTML = '<div class="cal-status-dot loading"></div><span>取得中...</span>';
+
+  try {
+    const r = await api('/api/host/calendar-preview', { method: 'POST', body: { url: cal.url } });
+    if (r.ok) {
+      if (r.name) { cal.name = r.name; cal.autoName = true; }
+      calStatuses[calId] = { ok: true, msg: `✓ ${r.count || 0}件取得${r.name ? '、名前: ' + r.name : ''}` };
+      if(nameEl){ nameEl.textContent=cal.name||'—'; nameEl.className='cal-name-lbl'+(cal.autoName?' auto':''); }
+      if(statEl) statEl.innerHTML = `<div class="cal-status-dot ok"></div><span>${esc(calStatuses[calId].msg)}</span>`;
+    } else {
+      calStatuses[calId] = { ok: false, msg: 'エラー: ' + String(r.error || '').slice(0, 50) };
+      if(statEl) statEl.innerHTML = `<div class="cal-status-dot err"></div><span>${esc(calStatuses[calId].msg)}</span>`;
+    }
+  } catch(e) {
+    calStatuses[calId] = {ok:false, msg:'エラー: '+String(e.message).slice(0,50)};
+    if(statEl) statEl.innerHTML = `<div class="cal-status-dot err"></div><span>${esc(calStatuses[calId].msg)}</span>`;
+  }
+}
+
+async function adminFetchAll() {
+  if (IS_CLIENT_MODE) return;
+  const btn = document.getElementById('btn-fetch-all');
+  btn.textContent = '⏳ 取得中...'; btn.disabled=true;
+  const p = S.profiles.find(x=>x.id===editingProfileId);
+  try {
+    if (p && p.calendars.some(c => c.url)) {
+      const data = await api('/api/host/events?profileId=' + encodeURIComponent(p.id) + '&suggestions=1');
+      if (data.suggestedNames) {
+        for (const cal of p.calendars) {
+          const sn = data.suggestedNames[cal.id];
+          if (sn && (!cal.name || cal.autoName)) { cal.name = sn; cal.autoName = true; }
+        }
+      }
+      (data.calendars || []).forEach(c => { calStatuses[c.id] = { ok: c.ok, msg: c.msg, count: c.count }; });
+      renderProfileEditor(p);
+    }
+    await fetchAllCalendars();
+  } catch (e) { alert(e.message); }
+  btn.textContent='🔄 全カレンダー取得'; btn.disabled=false;
+}
+
+async function saveProfile() {
+  const p = S.profiles.find(x=>x.id===editingProfileId);
+  if(!p) return;
+  const nameIn = document.getElementById('pe-name').value.trim();
+  if(nameIn) p.name = nameIn;
+  try {
+    await syncTenant();
+    renderProfileList();
+    const btn = document.querySelector('#adm-pe .btn-prim');
+    if(btn){ const t=btn.textContent; btn.textContent='✓ 保存済み'; setTimeout(()=>btn.textContent=t,1500); }
+  } catch (e) { alert(e.message); }
+}
+
+async function activateProfile() {
+  S.activeProfileId = editingProfileId;
+  try {
+    await syncTenant();
+    renderProfileList();
+    const p = S.profiles.find(x=>x.id===editingProfileId);
+    if(p) renderProfileEditor(p);
+    await fetchAllCalendars();
+  } catch (e) { alert(e.message); }
+}
+
+async function createProfile() {
+  const id = 'p'+Date.now();
+  const name = `プロファイル ${S.profiles.length+1}`;
+  S.profiles.push({id, name, calendars:[]});
+  editingProfileId = id;
+  showAdminTab('profile');
+  renderProfileList();
+  const p = S.profiles.find(x=>x.id===id);
+  renderProfileEditor(p);
+  try { await syncTenant(); } catch (e) { alert(e.message); }
+}
+
+async function deleteProfile() {
+  if(S.profiles.length<=1){ alert('最低1つのプロファイルが必要です'); return; }
+  if(!confirm('このプロファイルを削除しますか？')) return;
+  S.profiles = S.profiles.filter(p=>p.id!==editingProfileId);
+  if(S.activeProfileId===editingProfileId) S.activeProfileId=S.profiles[0].id;
+  editingProfileId = S.profiles[0].id;
+  try {
+    await syncTenant();
+    renderAdmin();
+  } catch (e) { alert(e.message); }
+}
+
+async function saveSettings() {
+  try {
+    await syncTenant();
+    const btn=document.querySelector('#adm-settings .btn-prim');
+    if(btn){const t=btn.textContent;btn.textContent='✓ 保存済み';setTimeout(()=>btn.textContent=t,1500);}
+    resetRefreshTimer();
+  } catch (e) { alert(e.message); }
+}
+
+// ══════════════════════════════════════════════
+//  PIN MODAL
+// ══════════════════════════════════════════════
+function openAdminPin() {
+  if (IS_CLIENT_MODE) return;
+  document.getElementById('pin-in').value='';
+  document.getElementById('pin-err').textContent='';
+  document.getElementById('pin-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('pin-in').focus(),150);
+}
+function closePinModal() { document.getElementById('pin-modal').classList.remove('open'); }
+async function submitPin() {
+  const el = document.getElementById('pin-in');
+  const entered = el.value.trim();
+  if (!entered) {
+    document.getElementById('pin-err').textContent = 'HOST_SECRET を入力してください';
+    return;
+  }
+  const prev = getHostToken();
+  setHostToken(entered);
+  try {
+    await loadTenant();
+    closePinModal();
+    switchView('admin');
+    const ab = document.getElementById('api-base-inp');
+    if (ab) ab.value = getApiBase();
+    renderInviteList();
+  } catch (e) {
+    setHostToken(prev);
+    document.getElementById('pin-err').textContent = 'SECRET が違うか、API に接続できません';
+    el.value = '';
+    el.focus();
+    setTimeout(() => { document.getElementById('pin-err').textContent = ''; }, 3500);
+  }
+}
+// Legacy alias
+function checkPin(el) { submitPin(); }
+
+// ══════════════════════════════════════════════
+//  PROFILE SWITCH MODAL
+// ══════════════════════════════════════════════
+function openSwitchModal() {
+  if (IS_CLIENT_MODE) return;
+  const list = document.getElementById('switch-list');
+  list.innerHTML = S.profiles.map(p=>`
+    <div class="switch-item${p.id===S.activeProfileId?' cur':''}" onclick="activateProfileDirect('${p.id}')">
+      <div class="switch-dot"></div>
+      <span>${esc(p.name)}</span>
+      ${p.id===S.activeProfileId?'<span style="font-size:10px;margin-left:auto;color:var(--p)">表示中</span>':''}
+    </div>`
+  ).join('');
+  document.getElementById('switch-modal').classList.add('open');
+}
+function closeSwitchModal() { document.getElementById('switch-modal').classList.remove('open'); }
+async function activateProfileDirect(id) {
+  S.activeProfileId = id;
+  closeSwitchModal();
+  try {
+    if (!IS_CLIENT_MODE && getHostToken()) await syncTenant();
+  } catch (e) { alert(e.message); }
+  fetchAllCalendars();
+}
+
+// ══════════════════════════════════════════════
+//  AUTO REFRESH TIMER
+// ══════════════════════════════════════════════
+function resetRefreshTimer() {
+  if(refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(fetchAllCalendars, (S.settings.refreshMin||5)*60*1000);
+}
+// Re-render signage every 30s for time accuracy
+setInterval(()=>{ if(currentView==='signage'&&events.length) renderSignage(); },30*1000);
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+(function init() {
+  const apiInpEarly = document.getElementById('api-base-inp');
+  if (apiInpEarly && getApiBase()) apiInpEarly.value = getApiBase();
+
+  if (IS_CLIENT_MODE) {
+    const gear = document.querySelector('#signage .icon-btn');
+    if (gear) gear.style.display = 'none';
+    const pill = document.getElementById('profile-pill');
+    if (pill) { pill.onclick = null; pill.style.cursor = 'default'; }
+    renderSignage();
+    setTheme(S.settings.theme);
+    fetchAllCalendars();
+    resetRefreshTimer();
+    setInterval(() => { if (currentView === 'signage' && events.length) renderSignage(); }, 30000);
+    return;
+  }
+
+  const profile = S.profiles.find(p=>p.id===S.activeProfileId)||S.profiles[0];
+  if(profile) S.activeProfileId=profile.id;
+  editingProfileId = S.activeProfileId;
+
+  renderSignage();
+  setTheme(S.settings.theme);
+
+  const tok = getHostToken();
+  if (tok) {
+    loadTenant().then(() => {
+      renderSignage();
+      setTheme(S.settings.theme);
+      const hasCals = S.profiles.some(p=>p.calendars.some(c=>c.url));
+      if (hasCals) fetchAllCalendars();
+      else setStatus('カレンダー未設定', 'warn');
+      resetRefreshTimer();
+    }).catch(() => {
+      try { sessionStorage.removeItem(HOST_TOKEN_KEY); } catch (_) {}
+      setStatus('再接続: 管理からログイン', 'warn');
+      resetRefreshTimer();
+    });
+  } else {
+    setStatus('管理画面でログイン', 'warn');
+    resetRefreshTimer();
+  }
+
+  setInterval(() => { if (currentView === 'signage' && events.length) renderSignage(); }, 30000);
+})();
+</script>
+</body>
+</html>

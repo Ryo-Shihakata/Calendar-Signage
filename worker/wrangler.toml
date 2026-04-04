@@ -1,0 +1,12 @@
+name = "calendar-signage-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[vars]
+# 開発時は wrangler secret put HOST_SECRET で本番用を設定
+
+# 初回: npx wrangler kv namespace create DATA
+# 表示された id を下記に貼り付け（ローカルのみなら wrangler dev --local でも可）
+[[kv_namespaces]]
+binding = "DATA"
+# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
