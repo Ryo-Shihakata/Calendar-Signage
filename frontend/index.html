@@ -12,31 +12,57 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Roboto',sans-serif
 
 /* ── THEME ── */
 :root{
-  --p:#1a73e8;--p-l:rgba(26,115,232,.1);--p-m:rgba(26,115,232,.18);
-  --bg:#fff;--bg2:#f1f3f4;--bg3:#fff;
-  --sf:#f8f9fa;--sf2:#f1f3f4;
-  --bd:#dadce0;--bd2:#e8eaed;
-  --tx:#3c4043;--tx2:#5f6368;--tx3:#80868b;
-  --today:#1a73e8;--today-tx:#fff;
-  --nowline:#ea4335;
-  --sun:#d93025;--sat:#1a73e8;
-  --g:#34a853;--r:#ea4335;--y:#fbbc04;
-  --shadow:0 1px 3px rgba(60,64,67,.15),0 1px 2px rgba(60,64,67,.25);
-  --shadow-lg:0 4px 20px rgba(60,64,67,.18);
+  --p:#5b87c5;--p-l:rgba(91,135,197,.1);--p-m:rgba(91,135,197,.2);
+  --bg:#f9f9fb;--bg2:#f0f0f3;--bg3:#fff;
+  --sf:#f3f3f6;--sf2:#e8e8ec;
+  --bd:#d8d8de;--bd2:#e4e4ea;
+  --tx:#393c42;--tx2:#5e626a;--tx3:#8a8f97;
+  --today:#5b87c5;--today-tx:#fff;
+  --nowline:#b85040;
+  --sun:#b85040;--sat:#5b87c5;
+  --g:#4a9b6f;--r:#b85040;--y:#b8882a;
+  --shadow:0 1px 3px rgba(50,55,65,.1),0 1px 2px rgba(50,55,65,.15);
+  --shadow-lg:0 4px 20px rgba(50,55,65,.14);
   --mono:'Roboto Mono',monospace;
 }
 [data-theme="dark"]{
-  --p:#8ab4f8;--p-l:rgba(138,180,248,.15);--p-m:rgba(138,180,248,.25);
-  --bg:#1e1e1e;--bg2:#252525;--bg3:#2a2a2a;
-  --sf:#2a2a2a;--sf2:#333;
-  --bd:#606060;--bd2:#7a7a7a;
-  --tx:#f0f0f0;--tx2:#c8c8c8;--tx3:#a0a0a0;
-  --today:#8ab4f8;--today-tx:#1e1e1e;
-  --nowline:#f28b82;
-  --sun:#f28b82;--sat:#8ab4f8;
-  --g:#81c995;--r:#f28b82;--y:#fdd663;
+  --p:#7ea8d8;--p-l:rgba(126,168,216,.15);--p-m:rgba(126,168,216,.25);
+  --bg:#1c1e22;--bg2:#23252a;--bg3:#282b30;
+  --sf:#282b30;--sf2:#30343b;
+  --bd:#464c58;--bd2:#565d6a;
+  --tx:#e4e6ea;--tx2:#b0b5be;--tx3:#7e8592;
+  --today:#7ea8d8;--today-tx:#1c1e22;
+  --nowline:#e07060;
+  --sun:#e07060;--sat:#7ea8d8;
+  --g:#6ab88a;--r:#e07060;--y:#d4aa55;
   --shadow:0 1px 3px rgba(0,0,0,.5);
   --shadow-lg:0 4px 20px rgba(0,0,0,.45);
+}
+[data-theme="warm"]{
+  --p:#8c6f4a;--p-l:rgba(140,111,74,.1);--p-m:rgba(140,111,74,.2);
+  --bg:#fdf8f2;--bg2:#f5ede1;--bg3:#fefaf6;
+  --sf:#f2e8d8;--sf2:#e8d8c4;
+  --bd:#cfc0a8;--bd2:#ddd0ba;
+  --tx:#3a2e1e;--tx2:#6b5540;--tx3:#9a7e62;
+  --today:#8c6f4a;--today-tx:#fdf8f2;
+  --nowline:#b85040;
+  --sun:#b85040;--sat:#5c6e9c;
+  --g:#4a8a5a;--r:#b85040;--y:#b08020;
+  --shadow:0 1px 3px rgba(80,55,30,.12);
+  --shadow-lg:0 4px 20px rgba(80,55,30,.15);
+}
+[data-theme="slate"]{
+  --p:#6278a0;--p-l:rgba(98,120,160,.1);--p-m:rgba(98,120,160,.2);
+  --bg:#f5f6f8;--bg2:#eceef2;--bg3:#fff;
+  --sf:#eceef2;--sf2:#e0e3e9;
+  --bd:#c8ccd6;--bd2:#d6d9e2;
+  --tx:#30343e;--tx2:#565c6a;--tx3:#828896;
+  --today:#6278a0;--today-tx:#fff;
+  --nowline:#a05048;
+  --sun:#a05048;--sat:#6278a0;
+  --g:#488060;--r:#a05048;--y:#9a7c28;
+  --shadow:0 1px 3px rgba(40,48,70,.12);
+  --shadow-lg:0 4px 20px rgba(40,48,70,.14);
 }
 body{background:var(--bg);color:var(--tx);transition:background .3s,color .3s}
 button,input,select{font-family:inherit}
@@ -50,8 +76,8 @@ button,input,select{font-family:inherit}
    SIGNAGE VIEW
    ============================== */
 #signage{
-  grid-template-rows:56px 1fr;
-  grid-template-columns:440px 1fr;
+  grid-template-rows:52px 1fr;
+  grid-template-columns:1fr 400px;
   height:100vh;
 }
 
@@ -59,17 +85,17 @@ button,input,select{font-family:inherit}
 #sig-hdr{
   grid-column:1/-1;
   display:flex;align-items:center;
-  padding:0 20px;gap:16px;
+  padding:0 16px;gap:12px;
   background:var(--bg);border-bottom:1px solid var(--bd);
-  box-shadow:0 1px 4px rgba(60,64,67,.08);
+  box-shadow:0 1px 4px rgba(60,64,67,.06);
   flex-shrink:0;
 }
 #sig-clock{
-  font-size:32px;font-weight:400;letter-spacing:-.5px;
-  color:var(--tx);min-width:140px;
+  font-size:28px;font-weight:300;letter-spacing:-.5px;
+  color:var(--tx);min-width:128px;
   font-variant-numeric:tabular-nums;
 }
-#sig-clock em{color:var(--p);font-style:normal}
+#sig-clock em{color:var(--p);font-style:normal;font-size:22px}
 #sig-dateinfo{display:flex;flex-direction:column;gap:0}
 #sig-date{font-size:13px;color:var(--tx3);font-family:var(--mono);letter-spacing:.04em}
 #sig-dow{font-size:16px;font-weight:600;color:var(--tx)}
@@ -97,10 +123,19 @@ button,input,select{font-family:inherit}
 }
 .icon-btn:hover{background:var(--sf2)}
 
-/* Left panel */
+/* Left panel (visually: calendar) */
 #sig-left{
   background:var(--bg);border-right:1px solid var(--bd);
   display:flex;flex-direction:column;overflow:hidden;
+  grid-column:1;grid-row:2;
+}
+
+/* Right panel (visually: events) */
+#sig-right{
+  background:var(--bg);
+  display:flex;flex-direction:column;overflow:hidden;
+  grid-column:2;grid-row:2;
+  border-left:1px solid var(--bd);
 }
 .plbl{
   font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.12em;text-transform:uppercase;
@@ -139,8 +174,69 @@ button,input,select{font-family:inherit}
 .ev-item.allday .ev-item-title{font-size:14px}
 .ev-empty{padding:20px 20px;font-size:13px;color:var(--tx3);text-align:center}
 
-/* Right panel */
-#sig-right{background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+/* ── Layout mode buttons ── */
+.layout-grp{
+  display:flex;background:var(--sf2);border-radius:6px;padding:2px;gap:1px;
+}
+.layout-opt{
+  padding:4px 11px;border-radius:4px;font-size:11px;cursor:pointer;
+  transition:all .15s;color:var(--tx3);user-select:none;border:none;background:transparent;
+  font-family:inherit;
+}
+.layout-opt.on{background:var(--bg);color:var(--p);font-weight:500;box-shadow:0 1px 4px rgba(50,55,65,.1)}
+
+/* ── Theme cycle button ── */
+.theme-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:4px 12px;background:var(--sf);border-radius:100px;
+  border:1px solid var(--bd);cursor:pointer;transition:all .15s;
+  font-size:11px;color:var(--tx2);font-family:inherit;
+}
+.theme-btn:hover{border-color:var(--p);color:var(--p)}
+
+/* ─── Event Layout Modes ─── */
+
+/* compact mode */
+#ev-list-scroll[data-layout="compact"] .ev-item-body{padding:7px 12px}
+#ev-list-scroll[data-layout="compact"] .ev-item-title{font-size:14px;margin-bottom:2px}
+#ev-list-scroll[data-layout="compact"] .ev-item-time{font-size:12px;margin-bottom:1px}
+#ev-list-scroll[data-layout="compact"] .ev-item-cal{font-size:11px}
+#ev-list-scroll[data-layout="compact"] .ev-item{margin-bottom:4px;border-radius:7px}
+#ev-list-scroll[data-layout="compact"] .ev-item-stripe{width:4px}
+#ev-list-scroll[data-layout="compact"] .ev-group-label{padding:7px 6px 3px;font-size:10px}
+#ev-list-scroll[data-layout="compact"] .ev-day-sep{padding:10px 14px 4px}
+#ev-list-scroll[data-layout="compact"] .ev-day-sep-num{font-size:22px}
+#ev-list-scroll[data-layout="compact"] .ev-day-sep-dow{font-size:12px}
+
+/* timeline mode */
+#ev-list-scroll[data-layout="timeline"] .ev-group{padding:0 10px}
+#ev-list-scroll[data-layout="timeline"] .ev-item{
+  border-radius:0;border:none;background:transparent;margin-bottom:0;
+  border-left:none;position:relative;padding-left:52px;
+}
+#ev-list-scroll[data-layout="timeline"] .ev-item-stripe{
+  position:absolute;left:20px;top:0;bottom:0;width:2px;border-radius:0;
+}
+#ev-list-scroll[data-layout="timeline"] .ev-item::before{
+  content:'';position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  width:10px;height:10px;border-radius:50%;
+  background:var(--bg2);border:2px solid var(--bd);z-index:1;
+}
+#ev-list-scroll[data-layout="timeline"] .ev-item-body{padding:10px 12px 10px 0}
+#ev-list-scroll[data-layout="timeline"] .ev-item-title{font-size:15px;margin-bottom:2px}
+#ev-list-scroll[data-layout="timeline"] .ev-item-time{font-size:12px;margin-bottom:1px}
+#ev-list-scroll[data-layout="timeline"] .ev-item-cal{font-size:11px}
+#ev-list-scroll[data-layout="timeline"] .ev-item.current::before{background:var(--p);border-color:var(--p)}
+#ev-list-scroll[data-layout="timeline"] .ev-day-sep-line::after{background:var(--bd)}
+
+/* large mode */
+#ev-list-scroll[data-layout="large"] .ev-item-body{padding:16px 18px}
+#ev-list-scroll[data-layout="large"] .ev-item-title{font-size:22px;margin-bottom:6px;white-space:normal}
+#ev-list-scroll[data-layout="large"] .ev-item-time{font-size:17px;margin-bottom:5px}
+#ev-list-scroll[data-layout="large"] .ev-item-cal{font-size:15px}
+#ev-list-scroll[data-layout="large"] .ev-item{margin-bottom:8px;border-radius:12px}
+#ev-list-scroll[data-layout="large"] .ev-item-stripe{width:8px}
+#ev-list-scroll[data-layout="large"] #today-num{font-size:96px}
 #sig-month{flex:1;display:flex;flex-direction:column;padding:12px 14px 8px;overflow:hidden}
 #month-hdr{margin-bottom:6px}
 #month-title{font-size:19px;font-weight:700;color:var(--tx)}
@@ -435,16 +531,16 @@ button,input,select{font-family:inherit}
 .switch-dot{width:8px;height:8px;border-radius:50%;background:var(--bd);flex-shrink:0}
 .switch-item.cur .switch-dot{background:var(--p)}
 
-[data-theme="dark"] .month-grid{border-color:#707070}
-[data-theme="dark"] .cal-week{border-bottom-color:#606060}
-[data-theme="dark"] .mcell{border-right-color:#606060}
-[data-theme="dark"] .cal-header{border-bottom-color:#707070;background:#2f2f2f}
-[data-theme="dark"] .month-dow{background:#2f2f2f}
-[data-theme="dark"] #sig-left{border-right-color:#606060}
-[data-theme="dark"] #sig-hdr{border-bottom-color:#606060}
-[data-theme="dark"] #today-hero{border-bottom-color:#606060}
-[data-theme="dark"] .ev-item{border-color:#555;background:#252525}
-[data-theme="dark"] .ui{border-color:#555;background:#252525}
+[data-theme="dark"] .month-grid{border-color:var(--bd)}
+[data-theme="dark"] .cal-week{border-bottom-color:var(--bd)}
+[data-theme="dark"] .mcell{border-right-color:var(--bd)}
+[data-theme="dark"] .cal-header{border-bottom-color:var(--bd);background:var(--sf2)}
+[data-theme="dark"] .month-dow{background:var(--sf2)}
+[data-theme="dark"] #sig-left{border-right-color:var(--bd)}
+[data-theme="dark"] #sig-right{border-left-color:var(--bd)}
+[data-theme="dark"] #sig-hdr{border-bottom-color:var(--bd)}
+[data-theme="dark"] #today-hero{border-bottom-color:var(--bd)}
+[data-theme="dark"] .ev-item{border-color:var(--bd);background:var(--bg2)}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--bd);border-radius:4px}
@@ -461,6 +557,15 @@ button,input,select{font-family:inherit}
       <div id="sig-dow">—</div>
     </div>
     <div class="sig-hr">
+      <!-- Layout mode picker (no login required) -->
+      <div class="layout-grp" id="layout-grp">
+        <button class="layout-opt on" data-l="card" onclick="setLayout('card')">カード</button>
+        <button class="layout-opt" data-l="compact" onclick="setLayout('compact')">コンパクト</button>
+        <button class="layout-opt" data-l="timeline" onclick="setLayout('timeline')">タイムライン</button>
+        <button class="layout-opt" data-l="large" onclick="setLayout('large')">大</button>
+      </div>
+      <!-- Theme cycle (no login required) -->
+      <button class="theme-btn" id="theme-cycle-btn" onclick="cycleTheme()" title="テーマ切替"></button>
       <div class="status-pill"><div class="sdot" id="sdot"></div><span id="stxt">起動中</span></div>
       <div class="profile-pill" id="profile-pill" onclick="openSwitchModal()">
         <span id="pname-pill">—</span><span style="font-size:10px;opacity:.6">▾</span>
@@ -469,6 +574,14 @@ button,input,select{font-family:inherit}
     </div>
   </div>
   <div id="sig-body" style="display:contents">
+    <!-- Calendar panel: grid-column:1 (left) via CSS -->
+    <div id="sig-right">
+      <div id="sig-month">
+        <div id="month-hdr"><span id="month-title">—</span><span id="month-year"></span></div>
+        <div class="month-grid" id="month-grid"></div>
+      </div>
+    </div>
+    <!-- Events panel: grid-column:2 (right) via CSS -->
     <div id="sig-left">
       <div class="plbl">TODAY</div>
       <div id="today-hero">
@@ -476,13 +589,6 @@ button,input,select{font-family:inherit}
         <div id="today-meta"><div id="today-month">—</div><div id="today-year">—</div></div>
       </div>
       <div id="ev-list-scroll"></div>
-    </div>
-    <div id="sig-right">
-      <div id="sig-month">
-        <div id="month-hdr"><span id="month-title">—</span><span id="month-year"></span></div>
-        <div class="month-grid" id="month-grid"></div>
-      </div>
-
     </div>
   </div>
 </div>
@@ -545,6 +651,8 @@ button,input,select{font-family:inherit}
               <div class="settings-ctl tg-grp" id="theme-tg">
                 <div class="tg-opt" data-v="light" onclick="setTheme('light')">☀ ライト</div>
                 <div class="tg-opt" data-v="dark" onclick="setTheme('dark')">🌙 ダーク</div>
+                <div class="tg-opt" data-v="warm" onclick="setTheme('warm')">🌿 ウォーム</div>
+                <div class="tg-opt" data-v="slate" onclick="setTheme('slate')">🪨 スレート</div>
               </div>
             </div>
             <div class="settings-row">
@@ -708,15 +816,41 @@ let currentView = 'signage';
 function saveState() { /* 設定のソースは Worker（localStorage にプロファイルは保存しない） */ }
 
 // ══════════════════════════════════════════════
-//  THEME
+//  THEME  (login-free: saved to localStorage)
 // ══════════════════════════════════════════════
+const THEME_CYCLE = ['light','dark','warm','slate'];
+const THEME_LABELS = {light:'☀ ライト', dark:'🌙 ダーク', warm:'🌿 ウォーム', slate:'🪨 スレート'};
+const LAYOUT_LS_KEY = 'signage_layout';
+const THEME_LS_KEY  = 'signage_theme_local';
+
 function setTheme(t) {
   S.settings.theme = t;
-  document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : '');
+  document.documentElement.setAttribute('data-theme', t || 'light');
   document.querySelectorAll('.tg-opt').forEach(el => el.classList.toggle('on', el.dataset.v === t));
+  // Update theme cycle button label
+  const btn = document.getElementById('theme-cycle-btn');
+  if (btn) btn.textContent = THEME_LABELS[t] || t;
+  try { localStorage.setItem(THEME_LS_KEY, t); } catch (_) {}
   saveState();
 }
-setTheme(S.settings.theme);
+
+function cycleTheme() {
+  const cur = S.settings.theme || 'light';
+  const idx = THEME_CYCLE.indexOf(cur);
+  const next = THEME_CYCLE[(idx + 1) % THEME_CYCLE.length];
+  setTheme(next);
+}
+
+// ── Layout mode (login-free: saved to localStorage) ──
+let currentLayout = 'card';
+function setLayout(mode) {
+  currentLayout = mode;
+  const scroll = document.getElementById('ev-list-scroll');
+  if (scroll) scroll.setAttribute('data-layout', mode === 'card' ? '' : mode);
+  document.querySelectorAll('.layout-opt').forEach(el =>
+    el.classList.toggle('on', el.dataset.l === mode));
+  try { localStorage.setItem(LAYOUT_LS_KEY, mode); } catch (_) {}
+}
 
 // ══════════════════════════════════════════════
 //  VIEW SWITCHING
@@ -943,7 +1077,7 @@ function renderMonthGrid() {
   weekStart.setDate(weekStart.getDate() - todayDow);
 
   const gridEnd = new Date(weekStart);
-  gridEnd.setDate(gridEnd.getDate() + 35);
+  gridEnd.setDate(gridEnd.getDate() + 28);
 
   // Header title
   const sm = weekStart.getMonth(), em = new Date(gridEnd.getTime()-1).getMonth();
@@ -975,7 +1109,7 @@ function renderMonthGrid() {
 
   const MAX_LANES = 99; // no limit - show all
 
-  for (let w = 0; w < 5; w++) {
+  for (let w = 0; w < 4; w++) {
     const wS = new Date(weekStart); wS.setDate(wS.getDate() + w * 7);
     const wE = new Date(wS);        wE.setDate(wE.getDate() + 7);  // exclusive
 
@@ -1512,13 +1646,25 @@ setInterval(()=>{ if(currentView==='signage'&&events.length) renderSignage(); },
   const apiInpEarly = document.getElementById('api-base-inp');
   if (apiInpEarly && getApiBase()) apiInpEarly.value = getApiBase();
 
+  // Restore layout preference (login-free)
+  try {
+    const savedLayout = localStorage.getItem(LAYOUT_LS_KEY);
+    if (savedLayout) { currentLayout = savedLayout; setLayout(savedLayout); }
+    else setLayout('card');
+  } catch (_) { setLayout('card'); }
+
+  // Restore theme preference (login-free local override)
+  let localTheme = null;
+  try { localTheme = localStorage.getItem(THEME_LS_KEY); } catch (_) {}
+  if (localTheme) setTheme(localTheme);
+  else setTheme(S.settings.theme);
+
   if (IS_CLIENT_MODE) {
     const gear = document.querySelector('#signage .icon-btn');
     if (gear) gear.style.display = 'none';
     const pill = document.getElementById('profile-pill');
     if (pill) { pill.onclick = null; pill.style.cursor = 'default'; }
     renderSignage();
-    setTheme(S.settings.theme);
     fetchAllCalendars();
     resetRefreshTimer();
     setInterval(() => { if (currentView === 'signage' && events.length) renderSignage(); }, 30000);
@@ -1530,13 +1676,15 @@ setInterval(()=>{ if(currentView==='signage'&&events.length) renderSignage(); },
   editingProfileId = S.activeProfileId;
 
   renderSignage();
-  setTheme(S.settings.theme);
 
   const tok = getHostToken();
   if (tok) {
     loadTenant().then(() => {
       renderSignage();
-      setTheme(S.settings.theme);
+      // Only apply server theme if no local override
+      let localTheme2 = null;
+      try { localTheme2 = localStorage.getItem(THEME_LS_KEY); } catch (_) {}
+      if (!localTheme2) setTheme(S.settings.theme);
       const hasCals = S.profiles.some(p=>p.calendars.some(c=>c.url));
       if (hasCals) fetchAllCalendars();
       else setStatus('カレンダー未設定', 'warn');
