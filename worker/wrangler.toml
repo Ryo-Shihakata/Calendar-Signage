@@ -8,5 +8,5 @@ compatibility_date = "2024-12-01"
 # 初回: npx wrangler kv namespace create DATA
 # 表示された id を下記に貼り付け（ローカルのみなら wrangler dev --local でも可）
 [[kv_namespaces]]
-binding = "CALENDAR_SIGNAGE_DATA"
-# id = "819df59ff32c4484a3c3b21cc69bd608"
+binding = "DATA"
+id = "99b9288489f4438fb6d90884f43a6d52"
