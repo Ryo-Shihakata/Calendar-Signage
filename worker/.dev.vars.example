@@ -1,2 +1,0 @@
-# コピーして .dev.vars にリネーム（.gitignore 推奨）
-HOST_SECRET=ローカル用の長いランダム文字列
