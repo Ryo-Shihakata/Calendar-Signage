@@ -100,33 +100,23 @@ button,input,select{font-family:inherit}
 #admin.on{display:grid}
 
 /* ==============================
-   SIGNAGE — base: split (calendar left, events right)
+   SIGNAGE — base: classic (events left, calendar right)
    ============================== */
 #signage{
   grid-template-rows:52px 1fr;
-  grid-template-columns:1fr 420px;
+  grid-template-columns:420px 1fr;
   height:100vh;
 }
-
-/* ── Layout: classic (events left, calendar right) ── */
-#signage[data-sig-layout="classic"]{grid-template-columns:420px 1fr}
-#signage[data-sig-layout="classic"] #sig-left{
+#sig-left{
   grid-column:1;grid-row:2;border-right:1px solid var(--bd);
 }
-#signage[data-sig-layout="classic"] #sig-right{
-  grid-column:2;grid-row:2;border-left:none;
+#sig-right{
+  grid-column:2;grid-row:2;
 }
 
 /* ── Layout: dashboard (today | tomorrow | upcoming — no calendar) ── */
-#signage[data-sig-layout="dashboard"]{
-  grid-template-columns:1fr 1fr 1fr;
-}
-#signage[data-sig-layout="dashboard"] #sig-left{
-  display:none;   /* replaced by #dash-today */
-}
-#signage[data-sig-layout="dashboard"] #sig-right{
-  display:none;   /* calendar hidden */
-}
+#signage[data-sig-layout="dashboard"] #sig-left{display:none}
+#signage[data-sig-layout="dashboard"] #sig-right{display:none}
 #signage[data-sig-layout="dashboard"] #dash-wrap{
   display:flex;grid-column:1/-1;grid-row:2;overflow:hidden;
 }
@@ -140,7 +130,8 @@ button,input,select{font-family:inherit}
 .dash-col:last-child{border-right:none}
 .dash-col-hdr{
   display:flex;align-items:center;gap:10px;
-  padding:14px 18px 10px;border-bottom:1px solid var(--bd);flex-shrink:0;
+  padding:14px 18px 12px;border-bottom:1px solid var(--bd);
+  flex-shrink:0;min-height:80px;
 }
 .dash-col-hdr-day{
   font-size:48px;font-weight:300;color:var(--p);line-height:1;
@@ -153,7 +144,7 @@ button,input,select{font-family:inherit}
   margin-left:auto;font-size:12px;font-weight:700;
   padding:3px 12px;border-radius:100px;
   background:var(--p-l);color:var(--p);
-  align-self:center;
+  align-self:flex-start;margin-top:4px;
 }
 .dash-col-hdr-tag.tag-tm{background:rgba(120,120,255,.1);color:#8090d0}
 .dash-col-hdr-tag.tag-up{background:var(--sf2);color:var(--tx3)}
@@ -186,13 +177,15 @@ button,input,select{font-family:inherit}
 .dash-ev.allday .dash-ev-title{font-size:14px}
 /* Day separator in upcoming column */
 .dash-day-sep{
-  display:flex;align-items:center;gap:8px;padding:8px 2px 4px;
-  margin-top:4px;flex-shrink:0;
+  display:flex;align-items:center;gap:8px;
+  padding:0;margin-top:4px;flex-shrink:0;
 }
+.dash-day-sep:first-child{margin-top:0}
 .dash-day-sep-num{
-  font-size:22px;font-weight:300;color:var(--tx2);font-variant-numeric:tabular-nums;min-width:28px;
+  font-size:20px;font-weight:300;color:var(--tx2);
+  font-variant-numeric:tabular-nums;min-width:26px;
 }
-.dash-day-sep-dow{font-size:12px;font-weight:700;color:var(--tx2)}
+.dash-day-sep-dow{font-size:11px;font-weight:700;color:var(--tx3);white-space:nowrap}
 .dash-day-sep-line{flex:1;height:1px;background:var(--bd)}
 .dash-empty{font-size:13px;color:var(--tx3);text-align:center;padding:24px 12px;font-style:italic}
 
@@ -669,7 +662,6 @@ button,input,select{font-family:inherit}
     <div class="sig-hr">
       <!-- Signage layout switcher (no login required) -->
       <div class="siglayout-grp" id="sig-layout-grp">
-        <button class="siglayout-opt"    data-sl="split"      onclick="setSigLayout('split')">スプリット</button>
         <button class="siglayout-opt on" data-sl="classic"    onclick="setSigLayout('classic')">クラシック</button>
         <button class="siglayout-opt"    data-sl="dashboard"  onclick="setSigLayout('dashboard')">ダッシュボード</button>
       </div>
