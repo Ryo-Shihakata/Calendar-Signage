@@ -1347,9 +1347,10 @@ function renderMonthGrid() {
   // Helper: last calendar-day an event occupies
   function evLastDay(ev) {
     if (ev.allDay) {
-      // iCal all-day end is exclusive
-      const d = new Date(ev.end.getTime() - 86400000);
-      d.setHours(0,0,0,0); return d;
+      // wireToEvents で既に inclusive 最終日に正規化済み
+      // （DTEND の翌日 exclusive → 1日引いて inclusive）
+      // ここでは単純に start-of-day を返すだけでOK
+      return dayStart(ev.end);
     }
     // timed: the start-of-day of the end time
     return dayStart(ev.end);
