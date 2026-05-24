@@ -64,6 +64,33 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Roboto',sans-serif
   --shadow:0 1px 3px rgba(40,48,70,.12);
   --shadow-lg:0 4px 20px rgba(40,48,70,.14);
 }
+/* ── 追加ダーク系テーマ ── */
+[data-theme="midnight"]{
+  --p:#8899f0;--p-l:rgba(136,153,240,.12);--p-m:rgba(136,153,240,.22);
+  --bg:#08091a;--bg2:#0d0f22;--bg3:#12152a;
+  --sf:#12152a;--sf2:#1a1e32;
+  --bd:#2a3060;--bd2:#353878;
+  --tx:#ccd0e8;--tx2:#8890b0;--tx3:#50587a;
+  --today:#8899f0;--today-tx:#08091a;
+  --nowline:#e06080;
+  --sun:#e06080;--sat:#8899f0;
+  --g:#50b080;--r:#e06080;--y:#d0a840;
+  --shadow:0 1px 6px rgba(0,0,30,.7);
+  --shadow-lg:0 4px 24px rgba(0,0,30,.8);
+}
+[data-theme="mocha"]{
+  --p:#c4985c;--p-l:rgba(196,152,92,.12);--p-m:rgba(196,152,92,.22);
+  --bg:#14100c;--bg2:#1c1610;--bg3:#241c15;
+  --sf:#241c15;--sf2:#2e231a;
+  --bd:#4a3c2c;--bd2:#5c4c38;
+  --tx:#e0d0b8;--tx2:#a89070;--tx3:#706050;
+  --today:#c4985c;--today-tx:#14100c;
+  --nowline:#e07060;
+  --sun:#e07060;--sat:#7a9aaa;
+  --g:#7ab870;--r:#e07060;--y:#c4985c;
+  --shadow:0 1px 6px rgba(20,10,0,.7);
+  --shadow-lg:0 4px 24px rgba(20,10,0,.8);
+}
 body{background:var(--bg);color:var(--tx);transition:background .3s,color .3s}
 button,input,select{font-family:inherit}
 
@@ -73,13 +100,96 @@ button,input,select{font-family:inherit}
 #admin.on{display:grid}
 
 /* ==============================
-   SIGNAGE VIEW
+   SIGNAGE VIEW — base (split: calendar left, events right)
    ============================== */
 #signage{
   grid-template-rows:52px 1fr;
   grid-template-columns:1fr 400px;
   height:100vh;
 }
+
+/* ── Layout: classic (events left, calendar right) ── */
+#signage[data-sig-layout="classic"]{grid-template-columns:420px 1fr}
+#signage[data-sig-layout="classic"] #sig-left{
+  grid-column:1;grid-row:2;border-right:1px solid var(--bd);border-left:none;
+}
+#signage[data-sig-layout="classic"] #sig-right{
+  grid-column:2;grid-row:2;border-left:none;
+}
+
+/* ── Layout: dashboard (today | calendar | upcoming) ── */
+#signage[data-sig-layout="dashboard"]{grid-template-columns:270px 1fr 310px}
+#signage[data-sig-layout="dashboard"] #sig-left{
+  grid-column:1;grid-row:2;border-right:1px solid var(--bd);border-left:none;
+}
+#signage[data-sig-layout="dashboard"] #sig-right{
+  grid-column:2;grid-row:2;border-left:none;border-right:1px solid var(--bd);
+}
+#signage[data-sig-layout="dashboard"] #sig-extra{
+  display:flex;flex-direction:column;overflow:hidden;
+  grid-column:3;grid-row:2;background:var(--bg);
+}
+
+/* ── Layout: overview (calendar top, event strip bottom) ── */
+#signage[data-sig-layout="overview"]{
+  grid-template-columns:1fr;
+  grid-template-rows:52px 1fr 210px;
+}
+#signage[data-sig-layout="overview"] #sig-right{
+  grid-column:1;grid-row:2;border-left:none;border-right:none;
+  border-bottom:1px solid var(--bd);
+}
+#signage[data-sig-layout="overview"] #sig-left{
+  grid-column:1;grid-row:3;
+  border-left:none;border-right:none;border-top:none;
+  flex-direction:row;
+}
+#signage[data-sig-layout="overview"] #sig-left .ev-panel-hdr{display:none}
+#signage[data-sig-layout="overview"] #today-hero{
+  width:170px;flex-shrink:0;border-bottom:none;border-right:1px solid var(--bd);
+  flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:16px;
+}
+#signage[data-sig-layout="overview"] #ev-list-scroll{
+  flex:1;overflow-x:auto;overflow-y:hidden;
+  display:flex;flex-direction:row;padding:8px 4px;align-items:stretch;
+  scrollbar-width:thin;
+}
+/* Overview day-column cards */
+.ov-day-col{
+  width:180px;flex-shrink:0;display:flex;flex-direction:column;
+  border-right:1px solid var(--bd);padding:8px 10px;gap:5px;
+}
+.ov-day-col:last-child{border-right:none}
+.ov-col-hdr{
+  font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.08em;text-transform:uppercase;
+  padding-bottom:5px;border-bottom:1px solid var(--bd);margin-bottom:2px;
+  display:flex;align-items:baseline;gap:6px;
+}
+.ov-col-hdr-num{font-size:20px;font-weight:300;color:var(--p);font-variant-numeric:tabular-nums}
+.ov-ev{
+  font-size:12px;font-weight:600;color:var(--tx);
+  padding:5px 8px;border-radius:6px;
+  border-left:3px solid transparent;background:var(--sf);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;
+}
+.ov-ev-time{font-size:10px;font-family:var(--mono);color:var(--tx3);font-weight:400;margin-top:1px}
+.ov-empty{font-size:11px;color:var(--tx3);padding:4px 6px;font-style:italic}
+
+/* ── Sig layout switcher buttons ── */
+.siglayout-grp{
+  display:flex;background:var(--sf2);border-radius:6px;padding:2px;gap:1px;
+}
+.siglayout-opt{
+  padding:4px 12px;border-radius:4px;font-size:11px;cursor:pointer;
+  transition:all .15s;color:var(--tx3);user-select:none;border:none;background:transparent;
+  font-family:inherit;white-space:nowrap;
+}
+.siglayout-opt.on{background:var(--bg);color:var(--p);font-weight:500;box-shadow:0 1px 4px rgba(50,55,65,.1)}
+
+/* ── #sig-extra (dashboard upcoming panel) ── */
+#sig-extra{display:none}
+#sig-extra .plbl{padding:10px 16px 4px;font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.12em;text-transform:uppercase;flex-shrink:0}
+#sig-extra .sig-extra-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--bd) transparent;padding:8px 0;min-height:0}
 
 /* Header */
 #sig-hdr{
@@ -174,6 +284,12 @@ button,input,select{font-family:inherit}
 .ev-item.allday .ev-item-title{font-size:14px}
 .ev-empty{padding:20px 20px;font-size:13px;color:var(--tx3);text-align:center}
 
+/* ── Layout mode buttons (event display, inside panel) ── */
+.ev-panel-hdr{
+  display:flex;align-items:center;padding:8px 14px 4px;gap:8px;flex-shrink:0;
+}
+.ev-panel-title{font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.12em;text-transform:uppercase}
+.ev-panel-hdr .layout-grp{margin-left:auto}
 /* ── Layout mode buttons ── */
 .layout-grp{
   display:flex;background:var(--sf2);border-radius:6px;padding:2px;gap:1px;
@@ -557,12 +673,12 @@ button,input,select{font-family:inherit}
       <div id="sig-dow">—</div>
     </div>
     <div class="sig-hr">
-      <!-- Layout mode picker (no login required) -->
-      <div class="layout-grp" id="layout-grp">
-        <button class="layout-opt on" data-l="card" onclick="setLayout('card')">カード</button>
-        <button class="layout-opt" data-l="compact" onclick="setLayout('compact')">コンパクト</button>
-        <button class="layout-opt" data-l="timeline" onclick="setLayout('timeline')">タイムライン</button>
-        <button class="layout-opt" data-l="large" onclick="setLayout('large')">大</button>
+      <!-- Signage layout switcher (no login required) -->
+      <div class="siglayout-grp" id="sig-layout-grp">
+        <button class="siglayout-opt on" data-sl="split"    onclick="setSigLayout('split')">スプリット</button>
+        <button class="siglayout-opt"    data-sl="classic"  onclick="setSigLayout('classic')">クラシック</button>
+        <button class="siglayout-opt"    data-sl="dashboard" onclick="setSigLayout('dashboard')">ダッシュボード</button>
+        <button class="siglayout-opt"    data-sl="overview" onclick="setSigLayout('overview')">概要</button>
       </div>
       <!-- Theme cycle (no login required) -->
       <button class="theme-btn" id="theme-cycle-btn" onclick="cycleTheme()" title="テーマ切替"></button>
@@ -583,12 +699,25 @@ button,input,select{font-family:inherit}
     </div>
     <!-- Events panel: grid-column:2 (right) via CSS -->
     <div id="sig-left">
-      <div class="plbl">TODAY</div>
+      <div class="ev-panel-hdr">
+        <span class="ev-panel-title">TODAY</span>
+        <div class="layout-grp" id="ev-layout-grp">
+          <button class="layout-opt on" data-l="card"     onclick="setLayout('card')">カード</button>
+          <button class="layout-opt"    data-l="compact"  onclick="setLayout('compact')">コンパクト</button>
+          <button class="layout-opt"    data-l="timeline" onclick="setLayout('timeline')">タイムライン</button>
+          <button class="layout-opt"    data-l="large"    onclick="setLayout('large')">大</button>
+        </div>
+      </div>
       <div id="today-hero">
         <div id="today-num">—</div>
         <div id="today-meta"><div id="today-month">—</div><div id="today-year">—</div></div>
       </div>
       <div id="ev-list-scroll"></div>
+    </div>
+    <!-- Extra panel: shown only in dashboard layout -->
+    <div id="sig-extra">
+      <div class="plbl">UPCOMING</div>
+      <div class="sig-extra-scroll" id="sig-extra-scroll"></div>
     </div>
   </div>
 </div>
@@ -818,8 +947,11 @@ function saveState() { /* 設定のソースは Worker（localStorage にプロ�
 // ══════════════════════════════════════════════
 //  THEME  (login-free: saved to localStorage)
 // ══════════════════════════════════════════════
-const THEME_CYCLE = ['light','dark','warm','slate'];
-const THEME_LABELS = {light:'☀ ライト', dark:'🌙 ダーク', warm:'🌿 ウォーム', slate:'🪨 スレート'};
+const THEME_CYCLE = ['light','dark','warm','slate','midnight','mocha'];
+const THEME_LABELS = {
+  light:'☀ ライト', dark:'🌙 ダーク', warm:'🌿 ウォーム',
+  slate:'🪨 スレート', midnight:'✦ ミッドナイト', mocha:'☕ モカ'
+};
 const LAYOUT_LS_KEY = 'signage_layout';
 const THEME_LS_KEY  = 'signage_theme_local';
 
@@ -850,6 +982,21 @@ function setLayout(mode) {
   document.querySelectorAll('.layout-opt').forEach(el =>
     el.classList.toggle('on', el.dataset.l === mode));
   try { localStorage.setItem(LAYOUT_LS_KEY, mode); } catch (_) {}
+}
+
+// ── Signage layout (login-free: saved to localStorage) ──
+const SIG_LAYOUT_LS_KEY = 'signage_sig_layout';
+let currentSigLayout = 'split';
+
+function setSigLayout(mode) {
+  currentSigLayout = mode;
+  const sig = document.getElementById('signage');
+  if (mode === 'split') sig.removeAttribute('data-sig-layout');
+  else sig.setAttribute('data-sig-layout', mode);
+  document.querySelectorAll('.siglayout-opt').forEach(el =>
+    el.classList.toggle('on', el.dataset.sl === mode));
+  try { localStorage.setItem(SIG_LAYOUT_LS_KEY, mode); } catch (_) {}
+  renderSignage();
 }
 
 // ══════════════════════════════════════════════
@@ -935,8 +1082,15 @@ function renderSignage() {
   const profile = S.profiles.find(p=>p.id===S.activeProfileId) || S.profiles[0];
   const label = IS_CLIENT_MODE && window.__clientProfileName ? window.__clientProfileName : (profile ? profile.name : '—');
   document.getElementById('pname-pill').textContent = label;
-  renderDayView();
   renderMonthGrid();
+  if (currentSigLayout === 'dashboard') {
+    renderDayView(true);   // today-only in sig-left
+    renderUpcoming();      // next days in sig-extra
+  } else if (currentSigLayout === 'overview') {
+    renderOverviewEvents(); // horizontal day columns
+  } else {
+    renderDayView(false);  // all events
+  }
 }
 
 function dayStart(d) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
@@ -949,8 +1103,67 @@ function hexToRgb(h) {
   return `${r},${g},${b}`;
 }
 
+// ── Shared event helpers ──
+function getEventsForDay(targetDate) {
+  const targetKey = dk(targetDate);
+  return events.filter(ev => {
+    if (ev.allDay) {
+      const endInclusive = new Date(ev.end.getTime() - 1);
+      return dk(ev.start) <= targetKey && dk(endInclusive) >= targetKey;
+    }
+    return dk(ev.start) === targetKey;
+  }).sort((a,b) => {
+    if (a.allDay && !b.allDay) return -1;
+    if (!a.allDay && b.allDay) return 1;
+    return a.start - b.start;
+  });
+}
+
+function renderEvItems(dayEvs, isToday) {
+  const now = new Date();
+  let out = '';
+  const allDay = dayEvs.filter(e => e.allDay);
+  const timed  = dayEvs.filter(e => !e.allDay);
+
+  if (allDay.length) {
+    out += '<div class="ev-group" style="margin-bottom:4px"><div class="ev-group-label">終日</div>';
+    allDay.forEach(ev => {
+      out += `<div class="ev-item allday">
+        <div class="ev-item-stripe" style="background:${ev.color}"></div>
+        <div class="ev-item-body">
+          <div class="ev-item-title">${esc(ev.title)}</div>
+          <div class="ev-item-cal"><div class="ev-item-cal-dot" style="background:${ev.color}"></div>${esc(ev.calName||'')}</div>
+        </div>
+      </div>`;
+    });
+    out += '</div>';
+  }
+
+  if (timed.length) {
+    const mt = allDay.length ? ' style="margin-top:10px"' : '';
+    out += `<div class="ev-group"${mt}>`;
+    if (allDay.length) out += '<div class="ev-group-label">予定</div>';
+    timed.forEach(ev => {
+      const sh=ev.start.getHours(), sm=ev.start.getMinutes();
+      const eh=ev.end.getHours(),   em=ev.end.getMinutes();
+      const timeStr = `${p2(sh)}:${p2(sm)} – ${p2(eh)}:${p2(em)}`;
+      const isCur = isToday && ev.start <= now && ev.end > now;
+      out += `<div class="ev-item${isCur?' current':''}">
+        <div class="ev-item-stripe" style="background:${ev.color}"></div>
+        <div class="ev-item-body">
+          <div class="ev-item-title">${esc(ev.title)}</div>
+          <div class="ev-item-time">${timeStr}</div>
+          <div class="ev-item-cal"><div class="ev-item-cal-dot" style="background:${ev.color}"></div>${esc(ev.calName||'')}</div>
+        </div>
+      </div>`;
+    });
+    out += '</div>';
+  }
+  return out;
+}
+
 /* ─ Event List (left panel) — today + next days ─ */
-function renderDayView() {
+function renderDayView(todayOnly) {
   const now = new Date();
   document.getElementById('today-num').textContent = now.getDate();
   document.getElementById('today-month').textContent = MN_JA[now.getMonth()];
@@ -959,7 +1172,94 @@ function renderDayView() {
   const scroll = document.getElementById('ev-list-scroll');
   let html = '';
 
-  // Helper: get events for a given calendar-day
+  // ── Today ──
+  const todayEvs = getEventsForDay(now);
+  if (todayEvs.length) {
+    html += renderEvItems(todayEvs, true);
+  } else {
+    html += '<div class="ev-empty">今日の予定はありません</div>';
+  }
+
+  // ── Next days (show up to 7 days ahead, skip empty days) ──
+  if (!todayOnly) {
+    let daysShown = 0;
+    for (let offset = 1; offset <= 14 && daysShown < 7; offset++) {
+      const d = new Date(now);
+      d.setDate(d.getDate() + offset);
+      d.setHours(0,0,0,0);
+      const dayEvs = getEventsForDay(d);
+      if (!dayEvs.length) continue;
+      daysShown++;
+
+      const dow = WK_JA[d.getDay()];
+      const dateStr = `${d.getFullYear()}.${p2(d.getMonth()+1)}.${p2(d.getDate())}`;
+      const tagHtml = offset === 1
+        ? `<span class="ev-day-sep-tag tom">明日</span>`
+        : offset <= 3
+          ? `<span class="ev-day-sep-tag soon">${offset}日後</span>`
+          : '';
+
+      html += `<div class="ev-day-sep-line"></div>
+        <div class="ev-day-sep">
+          <div class="ev-day-sep-num">${d.getDate()}</div>
+          <div class="ev-day-sep-meta">
+            <div class="ev-day-sep-dow">${dow}曜日</div>
+            <div class="ev-day-sep-date">${dateStr}</div>
+          </div>
+          ${tagHtml}
+        </div>`;
+      html += renderEvItems(dayEvs, false);
+    }
+  }
+
+  scroll.innerHTML = html;
+}
+
+/* ─ Dashboard: upcoming events in #sig-extra ─ */
+function renderUpcoming() {
+  const now = new Date();
+  const el = document.getElementById('sig-extra-scroll');
+  if (!el) return;
+  let html = '';
+  let daysShown = 0;
+  for (let offset = 1; offset <= 21 && daysShown < 10; offset++) {
+    const d = new Date(now);
+    d.setDate(d.getDate() + offset);
+    d.setHours(0,0,0,0);
+    const dayEvs = getEventsForDay(d);
+    if (!dayEvs.length) continue;
+    daysShown++;
+    const dow = WK_JA[d.getDay()];
+    const dateStr = `${d.getFullYear()}.${p2(d.getMonth()+1)}.${p2(d.getDate())}`;
+    const tagHtml = offset === 1
+      ? `<span class="ev-day-sep-tag tom">明日</span>`
+      : offset <= 3
+        ? `<span class="ev-day-sep-tag soon">${offset}日後</span>`
+        : '';
+    html += `<div class="ev-day-sep-line"></div>
+      <div class="ev-day-sep">
+        <div class="ev-day-sep-num">${d.getDate()}</div>
+        <div class="ev-day-sep-meta">
+          <div class="ev-day-sep-dow">${dow}曜日</div>
+          <div class="ev-day-sep-date">${dateStr}</div>
+        </div>${tagHtml}
+      </div>`;
+    html += renderEvItems(dayEvs, false);
+  }
+  if (!daysShown) html = '<div class="ev-empty">今後の予定はありません</div>';
+  el.innerHTML = html;
+}
+
+/* ─ Overview: horizontal day-column strip ─ */
+function renderOverviewEvents() {
+  const now = new Date();
+  document.getElementById('today-num').textContent = now.getDate();
+  document.getElementById('today-month').textContent = MN_JA[now.getMonth()];
+  document.getElementById('today-year').textContent = now.getFullYear();
+
+  const scroll = document.getElementById('ev-list-scroll');
+  let html = '';
+
   function getEventsForDay(targetDate) {
     const targetKey = dk(targetDate);
     return events.filter(ev => {
@@ -975,87 +1275,39 @@ function renderDayView() {
     });
   }
 
-  // Helper: render events for a day (returns HTML string)
-  function renderEvItems(dayEvs, isToday) {
-    let out = '';
-    const allDay = dayEvs.filter(e => e.allDay);
-    const timed  = dayEvs.filter(e => !e.allDay);
-
-    if (allDay.length) {
-      out += '<div class="ev-group" style="margin-bottom:4px"><div class="ev-group-label">終日</div>';
-      allDay.forEach(ev => {
-        out += `<div class="ev-item allday">
-          <div class="ev-item-stripe" style="background:${ev.color}"></div>
-          <div class="ev-item-body">
-            <div class="ev-item-title">${esc(ev.title)}</div>
-            <div class="ev-item-cal"><div class="ev-item-cal-dot" style="background:${ev.color}"></div>${esc(ev.calName||'')}</div>
-          </div>
-        </div>`;
-      });
-      out += '</div>';
-    }
-
-    if (timed.length) {
-      const mt = allDay.length ? ' style="margin-top:10px"' : '';
-      out += `<div class="ev-group"${mt}>`;
-      if (allDay.length) out += '<div class="ev-group-label">予定</div>';
-      timed.forEach(ev => {
-        const sh=ev.start.getHours(), sm=ev.start.getMinutes();
-        const eh=ev.end.getHours(),   em=ev.end.getMinutes();
-        const timeStr = `${p2(sh)}:${p2(sm)} – ${p2(eh)}:${p2(em)}`;
-        const isCur = isToday && ev.start <= now && ev.end > now;
-        out += `<div class="ev-item${isCur?' current':''}">
-          <div class="ev-item-stripe" style="background:${ev.color}"></div>
-          <div class="ev-item-body">
-            <div class="ev-item-title">${esc(ev.title)}</div>
-            <div class="ev-item-time">${timeStr}</div>
-            <div class="ev-item-cal"><div class="ev-item-cal-dot" style="background:${ev.color}"></div>${esc(ev.calName||'')}</div>
-          </div>
-        </div>`;
-      });
-      out += '</div>';
-    }
-    return out;
-  }
-
-  // ── Today ──
-  const todayEvs = getEventsForDay(now);
-  if (todayEvs.length) {
-    html += renderEvItems(todayEvs, true);
-  } else {
-    html += '<div class="ev-empty">今日の予定はありません</div>';
-  }
-
-  // ── Next days (show up to 7 days ahead, skip empty days) ──
-  let daysShown = 0;
-  for (let offset = 1; offset <= 14 && daysShown < 7; offset++) {
+  for (let offset = 0; offset <= 6; offset++) {
     const d = new Date(now);
     d.setDate(d.getDate() + offset);
     d.setHours(0,0,0,0);
     const dayEvs = getEventsForDay(d);
-    if (!dayEvs.length) continue;
-    daysShown++;
-
     const dow = WK_JA[d.getDay()];
-    const dateStr = `${d.getFullYear()}.${p2(d.getMonth()+1)}.${p2(d.getDate())}`;
-    const tagHtml = offset === 1
-      ? `<span class="ev-day-sep-tag tom">明日</span>`
-      : offset <= 3
-        ? `<span class="ev-day-sep-tag soon">${offset}日後</span>`
-        : '';
-
-    html += `<div class="ev-day-sep-line"></div>
-      <div class="ev-day-sep">
-        <div class="ev-day-sep-num">${d.getDate()}</div>
-        <div class="ev-day-sep-meta">
-          <div class="ev-day-sep-dow">${dow}曜日</div>
-          <div class="ev-day-sep-date">${dateStr}</div>
-        </div>
-        ${tagHtml}
-      </div>`;
-    html += renderEvItems(dayEvs, false);
+    const isToday = offset === 0;
+    let colItems = '';
+    if (dayEvs.length === 0) {
+      colItems = '<div class="ov-empty">予定なし</div>';
+    } else {
+      dayEvs.slice(0, 5).forEach(ev => {
+        const timeStr = ev.allDay
+          ? '終日'
+          : `${p2(ev.start.getHours())}:${p2(ev.start.getMinutes())}`;
+        const isCur = isToday && !ev.allDay && ev.start <= now && ev.end > now;
+        colItems += `<div class="ov-ev${isCur?' current':''}" style="border-left-color:${ev.color};background:${isCur?'var(--p-l)':'var(--sf)'}">
+          ${esc(ev.title)}
+          <div class="ov-ev-time">${timeStr}</div>
+        </div>`;
+      });
+      if (dayEvs.length > 5) {
+        colItems += `<div class="ov-empty">+${dayEvs.length - 5}件</div>`;
+      }
+    }
+    html += `<div class="ov-day-col">
+      <div class="ov-col-hdr">
+        <span class="ov-col-hdr-num">${d.getDate()}</span>
+        <span>${dow}${isToday ? ' 今日' : ''}</span>
+      </div>
+      ${colItems}
+    </div>`;
   }
-
   scroll.innerHTML = html;
 }
 
