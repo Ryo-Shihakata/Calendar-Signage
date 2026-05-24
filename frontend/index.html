@@ -662,6 +662,7 @@ button,input,select{font-family:inherit}
     <div class="sig-hr">
       <!-- Signage layout switcher (no login required) -->
       <div class="siglayout-grp" id="sig-layout-grp">
+        <button class="siglayout-opt"    data-sl="split"      onclick="setSigLayout('split')">スプリット</button>
         <button class="siglayout-opt on" data-sl="classic"    onclick="setSigLayout('classic')">クラシック</button>
         <button class="siglayout-opt"    data-sl="dashboard"  onclick="setSigLayout('dashboard')">ダッシュボード</button>
       </div>
@@ -939,17 +940,27 @@ async function syncTenant() {
 }
 
 function wireToEvents(arr) {
-  return (arr || []).map(e => ({
-    uid: e.uid,
-    title: e.title,
-    start: new Date(e.start),
-    end: new Date(e.end),
-    allDay: e.allDay,
-    loc: e.loc || '',
-    color: e.color,
-    calName: e.calName,
-    rrule: null
-  }));
+  return (arr || []).map(e => {
+    let end = new Date(e.end);
+    if (e.allDay) {
+      // iCal DTEND;VALUE=DATE は最終日の翌日(exclusive)。
+      // -1ms ではタイムゾーンずれが残るため1日まるごと引いて
+      // inclusive な最終日に正規化する。
+      end = new Date(end);
+      end.setDate(end.getDate() - 1);
+    }
+    return {
+      uid: e.uid,
+      title: e.title,
+      start: new Date(e.start),
+      end,
+      allDay: e.allDay,
+      loc: e.loc || '',
+      color: e.color,
+      calName: e.calName,
+      rrule: null
+    };
+  });
 }
 
 let events = [];
@@ -1125,8 +1136,8 @@ function getEventsForDay(targetDate) {
   const targetKey = dk(targetDate);
   return events.filter(ev => {
     if (ev.allDay) {
-      const endInclusive = new Date(ev.end.getTime() - 1);
-      return dk(ev.start) <= targetKey && dk(endInclusive) >= targetKey;
+      // end は wireToEvents で inclusive 最終日に正規化済み
+      return dk(ev.start) <= targetKey && dk(ev.end) >= targetKey;
     }
     return dk(ev.start) === targetKey;
   }).sort((a,b) => {
