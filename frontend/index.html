@@ -100,80 +100,101 @@ button,input,select{font-family:inherit}
 #admin.on{display:grid}
 
 /* ==============================
-   SIGNAGE VIEW — base (split: calendar left, events right)
+   SIGNAGE — base: split (calendar left, events right)
    ============================== */
 #signage{
   grid-template-rows:52px 1fr;
-  grid-template-columns:1fr 400px;
+  grid-template-columns:1fr 420px;
   height:100vh;
 }
 
 /* ── Layout: classic (events left, calendar right) ── */
 #signage[data-sig-layout="classic"]{grid-template-columns:420px 1fr}
 #signage[data-sig-layout="classic"] #sig-left{
-  grid-column:1;grid-row:2;border-right:1px solid var(--bd);border-left:none;
+  grid-column:1;grid-row:2;border-right:1px solid var(--bd);
 }
 #signage[data-sig-layout="classic"] #sig-right{
   grid-column:2;grid-row:2;border-left:none;
 }
 
-/* ── Layout: dashboard (today | calendar | upcoming) ── */
-#signage[data-sig-layout="dashboard"]{grid-template-columns:270px 1fr 310px}
+/* ── Layout: dashboard (today | tomorrow | upcoming — no calendar) ── */
+#signage[data-sig-layout="dashboard"]{
+  grid-template-columns:1fr 1fr 1fr;
+}
 #signage[data-sig-layout="dashboard"] #sig-left{
-  grid-column:1;grid-row:2;border-right:1px solid var(--bd);border-left:none;
+  display:none;   /* replaced by #dash-today */
 }
 #signage[data-sig-layout="dashboard"] #sig-right{
-  grid-column:2;grid-row:2;border-left:none;border-right:1px solid var(--bd);
+  display:none;   /* calendar hidden */
 }
-#signage[data-sig-layout="dashboard"] #sig-extra{
-  display:flex;flex-direction:column;overflow:hidden;
-  grid-column:3;grid-row:2;background:var(--bg);
+#signage[data-sig-layout="dashboard"] #dash-wrap{
+  display:flex;grid-column:1/-1;grid-row:2;overflow:hidden;
 }
 
-/* ── Layout: overview (calendar top, event strip bottom) ── */
-#signage[data-sig-layout="overview"]{
-  grid-template-columns:1fr;
-  grid-template-rows:52px 1fr 210px;
+/* Dashboard panels */
+#dash-wrap{display:none}
+.dash-col{
+  flex:1;display:flex;flex-direction:column;overflow:hidden;
+  border-right:1px solid var(--bd);
 }
-#signage[data-sig-layout="overview"] #sig-right{
-  grid-column:1;grid-row:2;border-left:none;border-right:none;
-  border-bottom:1px solid var(--bd);
+.dash-col:last-child{border-right:none}
+.dash-col-hdr{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 18px 10px;border-bottom:1px solid var(--bd);flex-shrink:0;
 }
-#signage[data-sig-layout="overview"] #sig-left{
-  grid-column:1;grid-row:3;
-  border-left:none;border-right:none;border-top:none;
-  flex-direction:row;
+.dash-col-hdr-day{
+  font-size:48px;font-weight:300;color:var(--p);line-height:1;
+  font-variant-numeric:tabular-nums;
 }
-#signage[data-sig-layout="overview"] #sig-left .ev-panel-hdr{display:none}
-#signage[data-sig-layout="overview"] #today-hero{
-  width:170px;flex-shrink:0;border-bottom:none;border-right:1px solid var(--bd);
-  flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:16px;
+.dash-col-hdr-meta{display:flex;flex-direction:column;gap:2px;padding-bottom:4px}
+.dash-col-hdr-dow{font-size:16px;font-weight:700;color:var(--tx)}
+.dash-col-hdr-mon{font-size:12px;color:var(--tx3)}
+.dash-col-hdr-tag{
+  margin-left:auto;font-size:12px;font-weight:700;
+  padding:3px 12px;border-radius:100px;
+  background:var(--p-l);color:var(--p);
+  align-self:center;
 }
-#signage[data-sig-layout="overview"] #ev-list-scroll{
-  flex:1;overflow-x:auto;overflow-y:hidden;
-  display:flex;flex-direction:row;padding:8px 4px;align-items:stretch;
-  scrollbar-width:thin;
+.dash-col-hdr-tag.tag-tm{background:rgba(120,120,255,.1);color:#8090d0}
+.dash-col-hdr-tag.tag-up{background:var(--sf2);color:var(--tx3)}
+.dash-scroll{
+  flex:1;overflow-y:auto;scrollbar-width:thin;
+  scrollbar-color:var(--bd) transparent;
+  padding:12px;display:flex;flex-direction:column;gap:8px;min-height:0;
 }
-/* Overview day-column cards */
-.ov-day-col{
-  width:180px;flex-shrink:0;display:flex;flex-direction:column;
-  border-right:1px solid var(--bd);padding:8px 10px;gap:5px;
+
+/* Dash event cards */
+.dash-ev{
+  border-radius:10px;border:1px solid var(--bd);
+  background:var(--bg);overflow:hidden;display:flex;align-items:stretch;
+  transition:box-shadow .15s;flex-shrink:0;
 }
-.ov-day-col:last-child{border-right:none}
-.ov-col-hdr{
-  font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.08em;text-transform:uppercase;
-  padding-bottom:5px;border-bottom:1px solid var(--bd);margin-bottom:2px;
-  display:flex;align-items:baseline;gap:6px;
+.dash-ev.cur{border-color:var(--p-m);background:var(--p-l)}
+.dash-ev-bar{width:8px;flex-shrink:0}
+.dash-ev-body{flex:1;padding:11px 14px;min-width:0}
+.dash-ev-title{
+  font-size:16px;font-weight:600;color:var(--tx);
+  line-height:1.3;margin-bottom:4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.ov-col-hdr-num{font-size:20px;font-weight:300;color:var(--p);font-variant-numeric:tabular-nums}
-.ov-ev{
-  font-size:12px;font-weight:600;color:var(--tx);
-  padding:5px 8px;border-radius:6px;
-  border-left:3px solid transparent;background:var(--sf);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;
+.dash-ev-time{
+  font-size:13px;color:var(--tx2);font-family:var(--mono);
+  margin-bottom:3px;font-weight:500;
 }
-.ov-ev-time{font-size:10px;font-family:var(--mono);color:var(--tx3);font-weight:400;margin-top:1px}
-.ov-empty{font-size:11px;color:var(--tx3);padding:4px 6px;font-style:italic}
+.dash-ev-cal{font-size:11px;color:var(--tx3);display:flex;align-items:center;gap:5px}
+.dash-ev-cal-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dash-ev.allday .dash-ev-title{font-size:14px}
+/* Day separator in upcoming column */
+.dash-day-sep{
+  display:flex;align-items:center;gap:8px;padding:8px 2px 4px;
+  margin-top:4px;flex-shrink:0;
+}
+.dash-day-sep-num{
+  font-size:22px;font-weight:300;color:var(--tx2);font-variant-numeric:tabular-nums;min-width:28px;
+}
+.dash-day-sep-dow{font-size:12px;font-weight:700;color:var(--tx2)}
+.dash-day-sep-line{flex:1;height:1px;background:var(--bd)}
+.dash-empty{font-size:13px;color:var(--tx3);text-align:center;padding:24px 12px;font-style:italic}
 
 /* ── Sig layout switcher buttons ── */
 .siglayout-grp{
@@ -185,11 +206,6 @@ button,input,select{font-family:inherit}
   font-family:inherit;white-space:nowrap;
 }
 .siglayout-opt.on{background:var(--bg);color:var(--p);font-weight:500;box-shadow:0 1px 4px rgba(50,55,65,.1)}
-
-/* ── #sig-extra (dashboard upcoming panel) ── */
-#sig-extra{display:none}
-#sig-extra .plbl{padding:10px 16px 4px;font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.12em;text-transform:uppercase;flex-shrink:0}
-#sig-extra .sig-extra-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--bd) transparent;padding:8px 0;min-height:0}
 
 /* Header */
 #sig-hdr{
@@ -233,14 +249,15 @@ button,input,select{font-family:inherit}
 }
 .icon-btn:hover{background:var(--sf2)}
 
-/* Left panel (visually: calendar) */
+/* Left panel (visually: events - changes by layout) */
 #sig-left{
-  background:var(--bg);border-right:1px solid var(--bd);
+  background:var(--bg);
   display:flex;flex-direction:column;overflow:hidden;
   grid-column:1;grid-row:2;
+  border-right:1px solid var(--bd);
 }
 
-/* Right panel (visually: events) */
+/* Right panel (visually: calendar - changes by layout) */
 #sig-right{
   background:var(--bg);
   display:flex;flex-direction:column;overflow:hidden;
@@ -249,23 +266,44 @@ button,input,select{font-family:inherit}
 }
 .plbl{
   font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.12em;text-transform:uppercase;
-  padding:10px 16px 4px;flex-shrink:0;
+  padding:12px 18px 4px;flex-shrink:0;
 }
 /* ── Today hero ── */
 #today-hero{
   display:flex;align-items:flex-end;gap:10px;
   padding:4px 20px 14px;border-bottom:1px solid var(--bd);flex-shrink:0;
 }
-#today-num{font-size:72px;font-weight:400;color:var(--p);line-height:1;font-variant-numeric:tabular-nums}
+#today-num{font-size:72px;font-weight:300;color:var(--p);line-height:1;font-variant-numeric:tabular-nums}
 #today-meta{display:flex;flex-direction:column;padding-bottom:8px;gap:2px}
 #today-month{font-size:22px;font-weight:600;color:var(--tx)}
 #today-year{font-size:15px;color:var(--tx3)}
+
 /* ── Event list ── */
 #ev-list-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--bd) transparent;padding:8px 0;min-height:0}
 .ev-group{padding:0 14px}
 .ev-group-label{
   font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.1em;text-transform:uppercase;
   padding:10px 6px 5px;
+}
+/* Section headers (TODAY / TOMORROW / UPCOMING) */
+.ev-section-hdr{
+  display:flex;align-items:center;gap:10px;padding:14px 14px 6px;flex-shrink:0;
+}
+.ev-section-hdr-num{
+  font-size:30px;font-weight:300;color:var(--p);line-height:1;font-variant-numeric:tabular-nums;min-width:36px;
+}
+.ev-section-hdr-meta{display:flex;flex-direction:column;gap:1px}
+.ev-section-hdr-dow{font-size:14px;font-weight:700;color:var(--tx)}
+.ev-section-hdr-sub{font-size:11px;color:var(--tx3);font-family:var(--mono)}
+.ev-section-tag{
+  margin-left:auto;font-size:11px;font-weight:700;font-family:var(--mono);
+  padding:2px 10px;border-radius:100px;
+}
+.ev-section-tag.today{background:var(--p-l);color:var(--p)}
+.ev-section-tag.tom{background:rgba(120,120,220,.1);color:#8090cc}
+.ev-section-tag.soon{background:rgba(180,100,60,.1);color:var(--r)}
+.ev-section-divider{
+  height:1px;background:var(--bd);margin:8px 14px 2px;flex-shrink:0;
 }
 .ev-item{
   display:flex;align-items:stretch;gap:0;
@@ -274,7 +312,7 @@ button,input,select{font-family:inherit}
   transition:box-shadow .15s;cursor:default;
 }
 .ev-item:hover{box-shadow:0 2px 8px rgba(60,64,67,.12)}
-.ev-item-stripe{width:6px;flex-shrink:0}
+.ev-item-stripe{width:8px;flex-shrink:0}
 .ev-item-body{flex:1;padding:12px 14px;min-width:0}
 .ev-item-title{font-size:17px;font-weight:600;color:var(--tx);line-height:1.3;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ev-item-time{font-size:14px;color:var(--tx2);font-family:var(--mono);margin-bottom:4px;font-weight:500}
@@ -282,24 +320,7 @@ button,input,select{font-family:inherit}
 .ev-item-cal-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .ev-item.current .ev-item-body{background:var(--p-l)}
 .ev-item.allday .ev-item-title{font-size:14px}
-.ev-empty{padding:20px 20px;font-size:13px;color:var(--tx3);text-align:center}
-
-/* ── Layout mode buttons (event display, inside panel) ── */
-.ev-panel-hdr{
-  display:flex;align-items:center;padding:8px 14px 4px;gap:8px;flex-shrink:0;
-}
-.ev-panel-title{font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.12em;text-transform:uppercase}
-.ev-panel-hdr .layout-grp{margin-left:auto}
-/* ── Layout mode buttons ── */
-.layout-grp{
-  display:flex;background:var(--sf2);border-radius:6px;padding:2px;gap:1px;
-}
-.layout-opt{
-  padding:4px 11px;border-radius:4px;font-size:11px;cursor:pointer;
-  transition:all .15s;color:var(--tx3);user-select:none;border:none;background:transparent;
-  font-family:inherit;
-}
-.layout-opt.on{background:var(--bg);color:var(--p);font-weight:500;box-shadow:0 1px 4px rgba(50,55,65,.1)}
+.ev-empty{padding:20px;font-size:13px;color:var(--tx3);text-align:center}
 
 /* ── Theme cycle button ── */
 .theme-btn{
@@ -311,19 +332,13 @@ button,input,select{font-family:inherit}
 .theme-btn:hover{border-color:var(--p);color:var(--p)}
 
 /* ─── Event Layout Modes ─── */
-
 /* compact mode */
 #ev-list-scroll[data-layout="compact"] .ev-item-body{padding:7px 12px}
 #ev-list-scroll[data-layout="compact"] .ev-item-title{font-size:14px;margin-bottom:2px}
 #ev-list-scroll[data-layout="compact"] .ev-item-time{font-size:12px;margin-bottom:1px}
 #ev-list-scroll[data-layout="compact"] .ev-item-cal{font-size:11px}
 #ev-list-scroll[data-layout="compact"] .ev-item{margin-bottom:4px;border-radius:7px}
-#ev-list-scroll[data-layout="compact"] .ev-item-stripe{width:4px}
-#ev-list-scroll[data-layout="compact"] .ev-group-label{padding:7px 6px 3px;font-size:10px}
-#ev-list-scroll[data-layout="compact"] .ev-day-sep{padding:10px 14px 4px}
-#ev-list-scroll[data-layout="compact"] .ev-day-sep-num{font-size:22px}
-#ev-list-scroll[data-layout="compact"] .ev-day-sep-dow{font-size:12px}
-
+#ev-list-scroll[data-layout="compact"] .ev-item-stripe{width:5px}
 /* timeline mode */
 #ev-list-scroll[data-layout="timeline"] .ev-group{padding:0 10px}
 #ev-list-scroll[data-layout="timeline"] .ev-item{
@@ -343,16 +358,14 @@ button,input,select{font-family:inherit}
 #ev-list-scroll[data-layout="timeline"] .ev-item-time{font-size:12px;margin-bottom:1px}
 #ev-list-scroll[data-layout="timeline"] .ev-item-cal{font-size:11px}
 #ev-list-scroll[data-layout="timeline"] .ev-item.current::before{background:var(--p);border-color:var(--p)}
-#ev-list-scroll[data-layout="timeline"] .ev-day-sep-line::after{background:var(--bd)}
-
 /* large mode */
 #ev-list-scroll[data-layout="large"] .ev-item-body{padding:16px 18px}
 #ev-list-scroll[data-layout="large"] .ev-item-title{font-size:22px;margin-bottom:6px;white-space:normal}
 #ev-list-scroll[data-layout="large"] .ev-item-time{font-size:17px;margin-bottom:5px}
 #ev-list-scroll[data-layout="large"] .ev-item-cal{font-size:15px}
 #ev-list-scroll[data-layout="large"] .ev-item{margin-bottom:8px;border-radius:12px}
-#ev-list-scroll[data-layout="large"] .ev-item-stripe{width:8px}
-#ev-list-scroll[data-layout="large"] #today-num{font-size:96px}
+#ev-list-scroll[data-layout="large"] .ev-item-stripe{width:10px}
+
 #sig-month{flex:1;display:flex;flex-direction:column;padding:12px 14px 8px;overflow:hidden}
 #month-hdr{margin-bottom:6px}
 #month-title{font-size:19px;font-weight:700;color:var(--tx)}
@@ -394,21 +407,25 @@ button,input,select{font-family:inherit}
   width:26px;height:26px;display:flex;align-items:center;justify-content:center;
   border-radius:50%;line-height:1;
 }
-/* Event span rows */
+/* Event span rows — FIXED: no margin so continuous bars touch */
 .cal-evrows{
-  display:flex;flex-direction:column;gap:1px;
-  padding:1px 0 3px;flex:1;overflow:hidden;
+  display:flex;flex-direction:column;gap:2px;
+  padding:2px 0 3px;flex:1;overflow:hidden;
 }
 .cal-evrow{
   display:grid;grid-template-columns:repeat(7,1fr);
-  height:22px;flex-shrink:0;
+  height:24px;flex-shrink:0;align-items:stretch;
 }
 .mspan{
-  height:20px;line-height:20px;
-  font-size:12px;font-weight:600;color:#fff;
-  padding:0 7px;
+  height:22px;line-height:22px;
+  font-size:11px;font-weight:600;color:#fff;
+  padding:0 6px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  cursor:default;margin:0 1px;
+  cursor:default;
+  /* No horizontal margin — prevents the "floating" gap between consecutive bars */
+  margin:0;
+  /* Inner padding column gutter handled by small inset on each cell edge */
+  box-shadow:inset 1px 0 0 rgba(255,255,255,.12),inset -1px 0 0 rgba(255,255,255,.12);
 }
 .mspan:hover{filter:brightness(.88)}
 .cal-overflow{height:18px}
@@ -417,30 +434,6 @@ button,input,select{font-family:inherit}
   padding:0 5px;line-height:16px;
   white-space:nowrap;overflow:hidden;
 }
-
-/* Day separator in event list */
-.ev-day-sep{
-  display:flex;align-items:center;gap:10px;
-  padding:14px 14px 6px;flex-shrink:0;
-}
-.ev-day-sep-num{
-  font-size:28px;font-weight:300;color:var(--tx2);line-height:1;
-  font-variant-numeric:tabular-nums;min-width:36px;
-}
-.ev-day-sep-meta{display:flex;flex-direction:column;justify-content:center;gap:1px}
-.ev-day-sep-dow{font-size:14px;font-weight:600;color:var(--tx2)}
-.ev-day-sep-date{font-size:11px;color:var(--tx3);font-family:var(--mono)}
-.ev-day-sep-tag{
-  margin-left:auto;font-size:11px;font-weight:700;font-family:var(--mono);
-  padding:2px 8px;border-radius:100px;
-}
-.ev-day-sep-tag.tom{background:var(--p-l);color:var(--p)}
-.ev-day-sep-tag.soon{background:rgba(234,67,53,.1);color:var(--r)}
-.ev-day-sep-line{
-  display:flex;align-items:center;padding:22px 14px 4px;
-  margin-top:6px;
-}
-.ev-day-sep-line::after{content:'';flex:1;height:2px;background:var(--bd)}
 
 .empty-msg{text-align:center;padding:16px;font-size:12px;color:var(--tx3)}
 
@@ -647,16 +640,17 @@ button,input,select{font-family:inherit}
 .switch-dot{width:8px;height:8px;border-radius:50%;background:var(--bd);flex-shrink:0}
 .switch-item.cur .switch-dot{background:var(--p)}
 
-[data-theme="dark"] .month-grid{border-color:var(--bd)}
-[data-theme="dark"] .cal-week{border-bottom-color:var(--bd)}
-[data-theme="dark"] .mcell{border-right-color:var(--bd)}
-[data-theme="dark"] .cal-header{border-bottom-color:var(--bd);background:var(--sf2)}
-[data-theme="dark"] .month-dow{background:var(--sf2)}
-[data-theme="dark"] #sig-left{border-right-color:var(--bd)}
-[data-theme="dark"] #sig-right{border-left-color:var(--bd)}
-[data-theme="dark"] #sig-hdr{border-bottom-color:var(--bd)}
-[data-theme="dark"] #today-hero{border-bottom-color:var(--bd)}
-[data-theme="dark"] .ev-item{border-color:var(--bd);background:var(--bg2)}
+[data-theme="dark"] .month-grid,[data-theme="midnight"] .month-grid,[data-theme="mocha"] .month-grid{border-color:var(--bd)}
+[data-theme="dark"] .cal-week,[data-theme="midnight"] .cal-week,[data-theme="mocha"] .cal-week{border-bottom-color:var(--bd)}
+[data-theme="dark"] .mcell,[data-theme="midnight"] .mcell,[data-theme="mocha"] .mcell{border-right-color:var(--bd)}
+[data-theme="dark"] .cal-header,[data-theme="midnight"] .cal-header,[data-theme="mocha"] .cal-header{border-bottom-color:var(--bd);background:var(--sf2)}
+[data-theme="dark"] .month-dow,[data-theme="midnight"] .month-dow,[data-theme="mocha"] .month-dow{background:var(--sf2)}
+[data-theme="dark"] #sig-left,[data-theme="midnight"] #sig-left,[data-theme="mocha"] #sig-left{border-right-color:var(--bd)}
+[data-theme="dark"] #sig-right,[data-theme="midnight"] #sig-right,[data-theme="mocha"] #sig-right{border-left-color:var(--bd)}
+[data-theme="dark"] #sig-hdr,[data-theme="midnight"] #sig-hdr,[data-theme="mocha"] #sig-hdr{border-bottom-color:var(--bd)}
+[data-theme="dark"] #today-hero,[data-theme="midnight"] #today-hero,[data-theme="mocha"] #today-hero{border-bottom-color:var(--bd)}
+[data-theme="dark"] .ev-item,[data-theme="midnight"] .ev-item,[data-theme="mocha"] .ev-item{border-color:var(--bd);background:var(--bg2)}
+[data-theme="dark"] .dash-ev,[data-theme="midnight"] .dash-ev,[data-theme="mocha"] .dash-ev{border-color:var(--bd);background:var(--bg2)}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--bd);border-radius:4px}
@@ -675,10 +669,9 @@ button,input,select{font-family:inherit}
     <div class="sig-hr">
       <!-- Signage layout switcher (no login required) -->
       <div class="siglayout-grp" id="sig-layout-grp">
-        <button class="siglayout-opt on" data-sl="split"    onclick="setSigLayout('split')">スプリット</button>
-        <button class="siglayout-opt"    data-sl="classic"  onclick="setSigLayout('classic')">クラシック</button>
-        <button class="siglayout-opt"    data-sl="dashboard" onclick="setSigLayout('dashboard')">ダッシュボード</button>
-        <button class="siglayout-opt"    data-sl="overview" onclick="setSigLayout('overview')">概要</button>
+        <button class="siglayout-opt"    data-sl="split"      onclick="setSigLayout('split')">スプリット</button>
+        <button class="siglayout-opt on" data-sl="classic"    onclick="setSigLayout('classic')">クラシック</button>
+        <button class="siglayout-opt"    data-sl="dashboard"  onclick="setSigLayout('dashboard')">ダッシュボード</button>
       </div>
       <!-- Theme cycle (no login required) -->
       <button class="theme-btn" id="theme-cycle-btn" onclick="cycleTheme()" title="テーマ切替"></button>
@@ -690,34 +683,55 @@ button,input,select{font-family:inherit}
     </div>
   </div>
   <div id="sig-body" style="display:contents">
-    <!-- Calendar panel: grid-column:1 (left) via CSS -->
+    <!-- Calendar panel (hidden in dashboard) -->
     <div id="sig-right">
       <div id="sig-month">
         <div id="month-hdr"><span id="month-title">—</span><span id="month-year"></span></div>
         <div class="month-grid" id="month-grid"></div>
       </div>
     </div>
-    <!-- Events panel: grid-column:2 (right) via CSS -->
+    <!-- Events panel (classic / split) -->
     <div id="sig-left">
-      <div class="ev-panel-hdr">
-        <span class="ev-panel-title">TODAY</span>
-        <div class="layout-grp" id="ev-layout-grp">
-          <button class="layout-opt on" data-l="card"     onclick="setLayout('card')">カード</button>
-          <button class="layout-opt"    data-l="compact"  onclick="setLayout('compact')">コンパクト</button>
-          <button class="layout-opt"    data-l="timeline" onclick="setLayout('timeline')">タイムライン</button>
-          <button class="layout-opt"    data-l="large"    onclick="setLayout('large')">大</button>
-        </div>
-      </div>
       <div id="today-hero">
         <div id="today-num">—</div>
         <div id="today-meta"><div id="today-month">—</div><div id="today-year">—</div></div>
       </div>
       <div id="ev-list-scroll"></div>
     </div>
-    <!-- Extra panel: shown only in dashboard layout -->
-    <div id="sig-extra">
-      <div class="plbl">UPCOMING</div>
-      <div class="sig-extra-scroll" id="sig-extra-scroll"></div>
+    <!-- Dashboard: 3 event columns (today | tomorrow | upcoming) -->
+    <div id="dash-wrap">
+      <div class="dash-col" id="dash-today">
+        <div class="dash-col-hdr">
+          <div class="dash-col-hdr-day" id="dash-today-num">—</div>
+          <div class="dash-col-hdr-meta">
+            <div class="dash-col-hdr-dow" id="dash-today-dow">—</div>
+            <div class="dash-col-hdr-mon" id="dash-today-mon">—</div>
+          </div>
+          <div class="dash-col-hdr-tag">TODAY</div>
+        </div>
+        <div class="dash-scroll" id="dash-today-scroll"></div>
+      </div>
+      <div class="dash-col" id="dash-tomorrow">
+        <div class="dash-col-hdr">
+          <div class="dash-col-hdr-day" id="dash-tom-num">—</div>
+          <div class="dash-col-hdr-meta">
+            <div class="dash-col-hdr-dow" id="dash-tom-dow">—</div>
+            <div class="dash-col-hdr-mon" id="dash-tom-mon">—</div>
+          </div>
+          <div class="dash-col-hdr-tag tag-tm">TOMORROW</div>
+        </div>
+        <div class="dash-scroll" id="dash-tom-scroll"></div>
+      </div>
+      <div class="dash-col" id="dash-upcoming">
+        <div class="dash-col-hdr" style="padding-bottom:14px">
+          <div class="dash-col-hdr-meta" style="padding-bottom:0">
+            <div class="dash-col-hdr-dow">今後の予定</div>
+            <div class="dash-col-hdr-mon">UPCOMING</div>
+          </div>
+          <div class="dash-col-hdr-tag tag-up">7日間</div>
+        </div>
+        <div class="dash-scroll" id="dash-up-scroll"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -778,10 +792,20 @@ button,input,select{font-family:inherit}
             <div class="settings-row">
               <div><div class="settings-lbl">テーマ</div><div class="settings-desc">サイネージの表示テーマ</div></div>
               <div class="settings-ctl tg-grp" id="theme-tg">
-                <div class="tg-opt" data-v="light" onclick="setTheme('light')">☀ ライト</div>
-                <div class="tg-opt" data-v="dark" onclick="setTheme('dark')">🌙 ダーク</div>
-                <div class="tg-opt" data-v="warm" onclick="setTheme('warm')">🌿 ウォーム</div>
-                <div class="tg-opt" data-v="slate" onclick="setTheme('slate')">🪨 スレート</div>
+                <div class="tg-opt" data-v="light"    onclick="setTheme('light')">☀ ライト</div>
+                <div class="tg-opt" data-v="dark"     onclick="setTheme('dark')">🌙 ダーク</div>
+                <div class="tg-opt" data-v="warm"     onclick="setTheme('warm')">🌿 ウォーム</div>
+                <div class="tg-opt" data-v="slate"    onclick="setTheme('slate')">🪨 スレート</div>
+                <div class="tg-opt" data-v="midnight" onclick="setTheme('midnight')">✦ ミッドナイト</div>
+                <div class="tg-opt" data-v="mocha"    onclick="setTheme('mocha')">☕ モカ</div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div><div class="settings-lbl">レイアウト</div><div class="settings-desc">サイネージの画面構成</div></div>
+              <div class="settings-ctl tg-grp" id="siglayout-tg">
+                <div class="tg-opt" data-v="split"     onclick="setSigLayout('split')">スプリット</div>
+                <div class="tg-opt" data-v="classic"   onclick="setSigLayout('classic')">クラシック</div>
+                <div class="tg-opt" data-v="dashboard" onclick="setSigLayout('dashboard')">ダッシュボード</div>
               </div>
             </div>
             <div class="settings-row">
@@ -986,7 +1010,7 @@ function setLayout(mode) {
 
 // ── Signage layout (login-free: saved to localStorage) ──
 const SIG_LAYOUT_LS_KEY = 'signage_sig_layout';
-let currentSigLayout = 'split';
+let currentSigLayout = 'classic'; // デフォルト: クラシック
 
 function setSigLayout(mode) {
   currentSigLayout = mode;
@@ -995,6 +1019,9 @@ function setSigLayout(mode) {
   else sig.setAttribute('data-sig-layout', mode);
   document.querySelectorAll('.siglayout-opt').forEach(el =>
     el.classList.toggle('on', el.dataset.sl === mode));
+  // Admin settings side
+  document.querySelectorAll('#siglayout-tg .tg-opt').forEach(el =>
+    el.classList.toggle('on', el.dataset.v === mode));
   try { localStorage.setItem(SIG_LAYOUT_LS_KEY, mode); } catch (_) {}
   renderSignage();
 }
@@ -1082,14 +1109,12 @@ function renderSignage() {
   const profile = S.profiles.find(p=>p.id===S.activeProfileId) || S.profiles[0];
   const label = IS_CLIENT_MODE && window.__clientProfileName ? window.__clientProfileName : (profile ? profile.name : '—');
   document.getElementById('pname-pill').textContent = label;
-  renderMonthGrid();
+
   if (currentSigLayout === 'dashboard') {
-    renderDayView(true);   // today-only in sig-left
-    renderUpcoming();      // next days in sig-extra
-  } else if (currentSigLayout === 'overview') {
-    renderOverviewEvents(); // horizontal day columns
+    renderDashboard();
   } else {
-    renderDayView(false);  // all events
+    renderDayView();
+    renderMonthGrid();
   }
 }
 
@@ -1162,9 +1187,12 @@ function renderEvItems(dayEvs, isToday) {
   return out;
 }
 
-/* ─ Event List (left panel) — today + next days ─ */
-function renderDayView(todayOnly) {
+/* ─ Event List (classic/split): TODAY section + upcoming sections ─ */
+function renderDayView() {
   const now = new Date();
+  const todayStart = dayStart(now);
+
+  // Update today hero
   document.getElementById('today-num').textContent = now.getDate();
   document.getElementById('today-month').textContent = MN_JA[now.getMonth()];
   document.getElementById('today-year').textContent = now.getFullYear();
@@ -1172,143 +1200,117 @@ function renderDayView(todayOnly) {
   const scroll = document.getElementById('ev-list-scroll');
   let html = '';
 
-  // ── Today ──
-  const todayEvs = getEventsForDay(now);
+  // ── TODAY section ──
+  // Only events where the day key exactly matches today (timed) OR allDay that spans today
+  const todayKey = dk(todayStart);
+  const todayEvs = getEventsForDay(todayStart);
+
+  html += `<div class="ev-section-hdr">
+    <div class="ev-section-hdr-num">${now.getDate()}</div>
+    <div class="ev-section-hdr-meta">
+      <div class="ev-section-hdr-dow">${WK_JA[now.getDay()]}曜日</div>
+      <div class="ev-section-hdr-sub">${MN_JA[now.getMonth()]} ${now.getFullYear()}</div>
+    </div>
+    <span class="ev-section-tag today">TODAY</span>
+  </div>`;
   if (todayEvs.length) {
     html += renderEvItems(todayEvs, true);
   } else {
     html += '<div class="ev-empty">今日の予定はありません</div>';
   }
 
-  // ── Next days (show up to 7 days ahead, skip empty days) ──
-  if (!todayOnly) {
-    let daysShown = 0;
-    for (let offset = 1; offset <= 14 && daysShown < 7; offset++) {
-      const d = new Date(now);
-      d.setDate(d.getDate() + offset);
-      d.setHours(0,0,0,0);
-      const dayEvs = getEventsForDay(d);
-      if (!dayEvs.length) continue;
-      daysShown++;
-
-      const dow = WK_JA[d.getDay()];
-      const dateStr = `${d.getFullYear()}.${p2(d.getMonth()+1)}.${p2(d.getDate())}`;
-      const tagHtml = offset === 1
-        ? `<span class="ev-day-sep-tag tom">明日</span>`
-        : offset <= 3
-          ? `<span class="ev-day-sep-tag soon">${offset}日後</span>`
-          : '';
-
-      html += `<div class="ev-day-sep-line"></div>
-        <div class="ev-day-sep">
-          <div class="ev-day-sep-num">${d.getDate()}</div>
-          <div class="ev-day-sep-meta">
-            <div class="ev-day-sep-dow">${dow}曜日</div>
-            <div class="ev-day-sep-date">${dateStr}</div>
-          </div>
-          ${tagHtml}
-        </div>`;
-      html += renderEvItems(dayEvs, false);
-    }
-  }
-
-  scroll.innerHTML = html;
-}
-
-/* ─ Dashboard: upcoming events in #sig-extra ─ */
-function renderUpcoming() {
-  const now = new Date();
-  const el = document.getElementById('sig-extra-scroll');
-  if (!el) return;
-  let html = '';
+  // ── Future days ──
   let daysShown = 0;
-  for (let offset = 1; offset <= 21 && daysShown < 10; offset++) {
-    const d = new Date(now);
+  for (let offset = 1; offset <= 30 && daysShown < 10; offset++) {
+    const d = new Date(todayStart);
     d.setDate(d.getDate() + offset);
-    d.setHours(0,0,0,0);
     const dayEvs = getEventsForDay(d);
     if (!dayEvs.length) continue;
     daysShown++;
-    const dow = WK_JA[d.getDay()];
-    const dateStr = `${d.getFullYear()}.${p2(d.getMonth()+1)}.${p2(d.getDate())}`;
+
     const tagHtml = offset === 1
-      ? `<span class="ev-day-sep-tag tom">明日</span>`
-      : offset <= 3
-        ? `<span class="ev-day-sep-tag soon">${offset}日後</span>`
+      ? `<span class="ev-section-tag tom">TOMORROW</span>`
+      : offset <= 6
+        ? `<span class="ev-section-tag soon">${offset}日後</span>`
         : '';
-    html += `<div class="ev-day-sep-line"></div>
-      <div class="ev-day-sep">
-        <div class="ev-day-sep-num">${d.getDate()}</div>
-        <div class="ev-day-sep-meta">
-          <div class="ev-day-sep-dow">${dow}曜日</div>
-          <div class="ev-day-sep-date">${dateStr}</div>
-        </div>${tagHtml}
+
+    html += `<div class="ev-section-divider"></div>
+      <div class="ev-section-hdr">
+        <div class="ev-section-hdr-num">${d.getDate()}</div>
+        <div class="ev-section-hdr-meta">
+          <div class="ev-section-hdr-dow">${WK_JA[d.getDay()]}曜日</div>
+          <div class="ev-section-hdr-sub">${d.getFullYear()}.${p2(d.getMonth()+1)}.${p2(d.getDate())}</div>
+        </div>
+        ${tagHtml}
       </div>`;
     html += renderEvItems(dayEvs, false);
   }
-  if (!daysShown) html = '<div class="ev-empty">今後の予定はありません</div>';
-  el.innerHTML = html;
+
+  scroll.innerHTML = html;
 }
 
-/* ─ Overview: horizontal day-column strip ─ */
-function renderOverviewEvents() {
+/* ─ Dashboard: 3-column card view (today / tomorrow / upcoming) ─ */
+function renderDashboard() {
   const now = new Date();
-  document.getElementById('today-num').textContent = now.getDate();
-  document.getElementById('today-month').textContent = MN_JA[now.getMonth()];
-  document.getElementById('today-year').textContent = now.getFullYear();
+  const todayStart = dayStart(now);
 
-  const scroll = document.getElementById('ev-list-scroll');
-  let html = '';
+  // Today column header
+  document.getElementById('dash-today-num').textContent = now.getDate();
+  document.getElementById('dash-today-dow').textContent = WK_JA[now.getDay()] + '曜日';
+  document.getElementById('dash-today-mon').textContent = MN_JA[now.getMonth()] + ' ' + now.getFullYear();
 
-  function getEventsForDay(targetDate) {
-    const targetKey = dk(targetDate);
-    return events.filter(ev => {
-      if (ev.allDay) {
-        const endInclusive = new Date(ev.end.getTime() - 1);
-        return dk(ev.start) <= targetKey && dk(endInclusive) >= targetKey;
-      }
-      return dk(ev.start) === targetKey;
-    }).sort((a,b) => {
-      if (a.allDay && !b.allDay) return -1;
-      if (!a.allDay && b.allDay) return 1;
-      return a.start - b.start;
-    });
-  }
+  // Tomorrow column header
+  const tom = new Date(todayStart); tom.setDate(tom.getDate() + 1);
+  document.getElementById('dash-tom-num').textContent = tom.getDate();
+  document.getElementById('dash-tom-dow').textContent = WK_JA[tom.getDay()] + '曜日';
+  document.getElementById('dash-tom-mon').textContent = MN_JA[tom.getMonth()] + ' ' + tom.getFullYear();
 
-  for (let offset = 0; offset <= 6; offset++) {
-    const d = new Date(now);
-    d.setDate(d.getDate() + offset);
-    d.setHours(0,0,0,0);
+  // Render today
+  const todayEvs = getEventsForDay(todayStart);
+  document.getElementById('dash-today-scroll').innerHTML =
+    todayEvs.length ? renderDashEvItems(todayEvs, true) : '<div class="dash-empty">今日の予定はありません</div>';
+
+  // Render tomorrow
+  const tomEvs = getEventsForDay(tom);
+  document.getElementById('dash-tom-scroll').innerHTML =
+    tomEvs.length ? renderDashEvItems(tomEvs, false) : '<div class="dash-empty">明日の予定はありません</div>';
+
+  // Render upcoming (day after tomorrow → +14 days, max 10 days with events)
+  let upHtml = '';
+  let daysShown = 0;
+  for (let offset = 2; offset <= 30 && daysShown < 10; offset++) {
+    const d = new Date(todayStart); d.setDate(d.getDate() + offset);
     const dayEvs = getEventsForDay(d);
-    const dow = WK_JA[d.getDay()];
-    const isToday = offset === 0;
-    let colItems = '';
-    if (dayEvs.length === 0) {
-      colItems = '<div class="ov-empty">予定なし</div>';
-    } else {
-      dayEvs.slice(0, 5).forEach(ev => {
-        const timeStr = ev.allDay
-          ? '終日'
-          : `${p2(ev.start.getHours())}:${p2(ev.start.getMinutes())}`;
-        const isCur = isToday && !ev.allDay && ev.start <= now && ev.end > now;
-        colItems += `<div class="ov-ev${isCur?' current':''}" style="border-left-color:${ev.color};background:${isCur?'var(--p-l)':'var(--sf)'}">
-          ${esc(ev.title)}
-          <div class="ov-ev-time">${timeStr}</div>
-        </div>`;
-      });
-      if (dayEvs.length > 5) {
-        colItems += `<div class="ov-empty">+${dayEvs.length - 5}件</div>`;
-      }
-    }
-    html += `<div class="ov-day-col">
-      <div class="ov-col-hdr">
-        <span class="ov-col-hdr-num">${d.getDate()}</span>
-        <span>${dow}${isToday ? ' 今日' : ''}</span>
-      </div>
-      ${colItems}
+    if (!dayEvs.length) continue;
+    daysShown++;
+    upHtml += `<div class="dash-day-sep">
+      <span class="dash-day-sep-num">${d.getDate()}</span>
+      <span class="dash-day-sep-dow">${WK_JA[d.getDay()]}・${MN_JA[d.getMonth()]}</span>
+      <div class="dash-day-sep-line"></div>
     </div>`;
+    upHtml += renderDashEvItems(dayEvs, false);
   }
-  scroll.innerHTML = html;
+  document.getElementById('dash-up-scroll').innerHTML = upHtml || '<div class="dash-empty">今後7日間の予定はありません</div>';
+}
+
+function renderDashEvItems(dayEvs, isToday) {
+  const now = new Date();
+  let out = '';
+  dayEvs.forEach(ev => {
+    const timeStr = ev.allDay
+      ? '終日'
+      : `${p2(ev.start.getHours())}:${p2(ev.start.getMinutes())} – ${p2(ev.end.getHours())}:${p2(ev.end.getMinutes())}`;
+    const isCur = isToday && !ev.allDay && ev.start <= now && ev.end > now;
+    out += `<div class="dash-ev${ev.allDay?' allday':''}${isCur?' cur':''}">
+      <div class="dash-ev-bar" style="background:${ev.color}"></div>
+      <div class="dash-ev-body">
+        <div class="dash-ev-title">${esc(ev.title)}</div>
+        <div class="dash-ev-time">${timeStr}</div>
+        <div class="dash-ev-cal"><div class="dash-ev-cal-dot" style="background:${ev.color}"></div>${esc(ev.calName||'')}</div>
+      </div>
+    </div>`;
+  });
+  return out;
 }
 
 function isLightColor(hex) {
@@ -1534,6 +1536,7 @@ function renderAdmin() {
   const ep = S.profiles.find(p=>p.id===editingProfileId) || S.profiles[0];
   if(ep){ editingProfileId=ep.id; renderProfileEditor(ep); }
   document.querySelectorAll('#theme-tg .tg-opt').forEach(el=>el.classList.toggle('on',el.dataset.v===S.settings.theme));
+  document.querySelectorAll('#siglayout-tg .tg-opt').forEach(el=>el.classList.toggle('on',el.dataset.v===currentSigLayout));
   const rs=document.getElementById('refresh-sel');
   if(rs) rs.value=String(S.settings.refreshMin);
   const apiBase = document.getElementById('api-base-inp');
@@ -1901,9 +1904,16 @@ setInterval(()=>{ if(currentView==='signage'&&events.length) renderSignage(); },
   // Restore layout preference (login-free)
   try {
     const savedLayout = localStorage.getItem(LAYOUT_LS_KEY);
-    if (savedLayout) { currentLayout = savedLayout; setLayout(savedLayout); }
+    if (savedLayout) setLayout(savedLayout);
     else setLayout('card');
   } catch (_) { setLayout('card'); }
+
+  // Restore signage layout (login-free, default: classic)
+  try {
+    const savedSigLayout = localStorage.getItem(SIG_LAYOUT_LS_KEY);
+    if (savedSigLayout) setSigLayout(savedSigLayout);
+    else setSigLayout('classic');
+  } catch (_) { setSigLayout('classic'); }
 
   // Restore theme preference (login-free local override)
   let localTheme = null;
