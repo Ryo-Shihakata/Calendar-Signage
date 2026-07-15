@@ -88,7 +88,7 @@ npx wrangler dev --local --port 8787
 
 ---
 
-## 本番デプロイ（要点）
+## 本番デプロイ
 
 1. Cloudflare で **KV 名前空間**を作成し、`worker/wrangler.toml` の `[[kv_namespaces]]` に **`id`** を記載。
 2. `cd worker && npx wrangler secret put HOST_SECRET`（本番専用の強いシークレット）。
