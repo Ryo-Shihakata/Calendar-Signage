@@ -136,14 +136,26 @@ function zonedTimeToUtcMs(y: number, mo: number, d: number, h: number, mi: numbe
   }
 }
 
-/** ある UTC 時刻を、指定タイムゾーンでの壁時計時刻の年月日時分秒に変換する */
+/** タイムゾーンごとに Intl.DateTimeFormat を使い回す（RRULE 展開で1イベントあたり最大400回呼ばれるため） */
+const dtfCache = new Map<string, Intl.DateTimeFormat>();
+function getDtf(tzid: string): Intl.DateTimeFormat {
+  let dtf = dtfCache.get(tzid);
+  if (!dtf) {
+    // 不正な TZID はここで RangeError を投げる（呼び出し元で捕捉する）
+    dtf = new Intl.DateTimeFormat('en-US', {
+      timeZone: tzid,
+      hourCycle: 'h23',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+    });
+    dtfCache.set(tzid, dtf);
+  }
+  return dtf;
+}
+
+/** ある UTC 時刻を、指定タイムゾーンでの壁時計時刻の年月日時分秒に変換する。TZID が不正なら例外を投げる */
 function zonedParts(tzid: string, utcMs: number): { y: number; mo: number; d: number; h: number; mi: number; s: number } {
-  const dtf = new Intl.DateTimeFormat('en-US', {
-    timeZone: tzid,
-    hourCycle: 'h23',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', second: '2-digit',
-  });
+  const dtf = getDtf(tzid);
   const map: Record<string, string> = {};
   for (const p of dtf.formatToParts(new Date(utcMs))) {
     if (p.type !== 'literal') map[p.type] = p.value;
@@ -164,10 +176,15 @@ function tzOffsetMs(tzid: string, utcMs: number): number {
  * Date」として返す（実時刻ではなく、繰り返し予定の日付計算専用の便宜表現）。
  * RRULE の DAILY/WEEKLY/MONTHLY/YEARLY ステップはこの壁時計表現の上で行い、
  * 毎回の実時刻は zonedTimeToUtcMs で改めて求める（DST をまたいでもズレないようにするため）。
+ * TZID が不正・未知（例: IANA 名でない "Eastern Standard Time" 等）の場合は null を返す。
  */
-function utcToWallDate(utcMs: number, tzid: string): Date {
-  const p = zonedParts(tzid, utcMs);
-  return new Date(Date.UTC(p.y, p.mo - 1, p.d, p.h, p.mi, p.s));
+function utcToWallDate(utcMs: number, tzid: string): Date | null {
+  try {
+    const p = zonedParts(tzid, utcMs);
+    return new Date(Date.UTC(p.y, p.mo - 1, p.d, p.h, p.mi, p.s));
+  } catch {
+    return null;
+  }
 }
 
 function toEv(ev: RawEvAcc, color: string, calName: string): ParsedEvent | null {
@@ -275,17 +292,23 @@ export function expand(
     }
   };
 
-  if (ev.tzid) {
+  // TZID あり、かつ壁時計時刻へ変換できた場合のみ TZID 対応ステップを使う。
+  // utcToWallDate は不正・未知の TZID（例: IANA 名でない "Eastern Standard Time" 等）で
+  // null を返すので、その場合は例外を投げずに従来の UTC 直接ステップへフォールバックする。
+  const wallStart = ev.tzid ? utcToWallDate(ev.start.getTime(), ev.tzid) : null;
+
+  if (ev.tzid && wallStart) {
     // TZID あり: DTSTART と同じ壁時計時刻（y/m/d/h/mi/s）を基準にステップし、
     // 毎回その壁時計時刻を改めて TZID で UTC に変換する。UTC ミリ秒を直接ステップすると
     // DST をまたいだ回だけ実時刻が1時間ズレ、EXDATE/RECURRENCE-ID の照合も外れてしまうため。
-    let wall = utcToWallDate(ev.start.getTime(), ev.tzid);
+    const tzid = ev.tzid;
+    let wall = wallStart;
     let i = 0;
     while (i < cnt) {
       const curMs =
         zonedTimeToUtcMs(
           wall.getUTCFullYear(), wall.getUTCMonth(), wall.getUTCDate(),
-          wall.getUTCHours(), wall.getUTCMinutes(), wall.getUTCSeconds(), ev.tzid
+          wall.getUTCHours(), wall.getUTCMinutes(), wall.getUTCSeconds(), tzid
         ) ?? wall.getTime();
       if (until && curMs > until.getTime()) break;
       if (curMs > re.getTime()) break;
@@ -298,7 +321,8 @@ export function expand(
       i++;
     }
   } else {
-    // TZID 無し（Z 付き、またはフォールバックのナイーブ値）: 従来どおり UTC ミリ秒を直接ステップ
+    // TZID 無し（Z 付き、TZID 未指定のナイーブ値、または TZID 解決失敗時のフォールバック）:
+    // 従来どおり UTC ミリ秒を直接ステップ
     let cur = new Date(ev.start);
     let i = 0;
     while (i < cnt) {

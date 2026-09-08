@@ -253,8 +253,8 @@ npx wrangler deploy
 ## 8. 制限事項・既知の挙動
 
 - **RRULE** は DAILY / WEEKLY / MONTHLY / YEARLY の簡易実装です。`BYDAY` 等の詳細ルールは未対応です（元の `index.html` 由来の制限を引き継いでいます）。
-- **タイムゾーン**: `DTSTART;TZID=...` の形式（Google Calendar 等が標準で出力）は、指定されたタイムゾーンの壁時計時刻として正しく UTC に変換されます（DST 込み）。`Z` 付きは UTC として解釈。TZID も `Z` も無い値は Worker のランタイム時刻（Cloudflare Workers は常に UTC）とみなすフォールバックです。ローカル日付のみのオールデイはローカル日として扱われます。
-- **EXDATE / RECURRENCE-ID**: 繰り返し予定から除外された回（EXDATE）はスキップされ、1回だけ変更された回（RECURRENCE-ID を持つ VEVENT）は元の回を上書きして表示されます。`RANGE=THISANDFUTURE`（それ以降すべてを変更）には未対応です。
+- **タイムゾーン**: `DTSTART;TZID=...` の形式（Google Calendar 等が標準で出力する IANA タイムゾーン名、例 `Asia/Tokyo`）は、指定されたタイムゾーンの壁時計時刻として正しく UTC に変換されます（DST 込み。繰り返し予定が DST の境界をまたいでも各回ごとに再計算されます）。`Z` 付きは UTC として解釈。TZID が IANA 名でない（例: Outlook/Exchange が出す `Eastern Standard Time` 等の Windows 形式）・存在しない・`Z` も無い場合は、クラッシュせず Worker のランタイム時刻（Cloudflare Workers は常に UTC）とみなすフォールバックに自動で切り替わります。ローカル日付のみのオールデイはローカル日として扱われます。
+- **EXDATE / RECURRENCE-ID**: 繰り返し予定から除外された回（EXDATE）はスキップされ、1回だけ変更された回（RECURRENCE-ID を持つ VEVENT）は元の回を上書きして表示されます。`RANGE=THISANDFUTURE`（それ以降すべてを変更）には未対応です。RFC 5545 では DTSTART が TZID 付きの場合 EXDATE/RECURRENCE-ID/UNTIL も同じ TZID または UTC(`Z`) で揃える規定ですが、これに従わない（フローティング時刻を混在させる）配信元では、対象回の照合がズレて重複表示や除外漏れが起きる可能性があります。
 - **HTTPS のみ**: Worker の `fetchIcalText` は `https://` の URL のみ許可します（`webcal://` は `https://` に置換）。
 
 ---
