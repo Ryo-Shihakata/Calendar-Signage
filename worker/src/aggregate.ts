@@ -1,4 +1,4 @@
-import { expand, extractCalName, fetchIcalText, parseIcal, toWire } from './ical';
+import { expandAll, extractCalName, fetchIcalText, parseIcal, toWire } from './ical';
 import type { CalendarFetchStatus, Profile, WireEvent } from './types';
 
 export interface AggregateResult {
@@ -29,13 +29,9 @@ export async function aggregateProfileEvents(
         }
         const displayName = cal.name || autoName || cal.url;
         const raw = parseIcal(text, cal.color, displayName);
-        let count = 0;
-        for (const ev of raw) {
-          for (const e of expand(ev, rangeStart, rangeEnd)) {
-            allEvs.push(toWire(e));
-            count++;
-          }
-        }
+        const expanded = expandAll(raw, rangeStart, rangeEnd);
+        for (const e of expanded) allEvs.push(toWire(e));
+        const count = expanded.length;
         calendars.push({ id: cal.id, ok: true, msg: `${count} 件`, count });
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
@@ -71,10 +67,7 @@ export async function previewCalendarUrl(url: string): Promise<{
     const text = await fetchIcalText(url);
     const name = extractCalName(text) ?? undefined;
     const raw = parseIcal(text, '#1a73e8', name || url);
-    let count = 0;
-    for (const ev of raw) {
-      count += expand(ev, rs, re).length;
-    }
+    const count = expandAll(raw, rs, re).length;
     return { ok: true, name, count };
   } catch (e) {
     const error = e instanceof Error ? e.message : String(e);
