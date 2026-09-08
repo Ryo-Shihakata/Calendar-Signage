@@ -252,8 +252,9 @@ npx wrangler deploy
 
 ## 8. 制限事項・既知の挙動
 
-- **RRULE** は DAILY / WEEKLY / MONTHLY / YEARLY の簡易実装です。複雑な BYDAY 等は元の `index.html` 由来の制限を引き継いでいます。
-- **タイムゾーン**: iCal の `Z` 付きは UTC として解釈。ローカル日付のみのオールデイはローカル日として扱われます。
+- **RRULE** は DAILY / WEEKLY / MONTHLY / YEARLY の簡易実装です。`BYDAY` 等の詳細ルールは未対応です（元の `index.html` 由来の制限を引き継いでいます）。
+- **タイムゾーン**: `DTSTART;TZID=...` の形式（Google Calendar 等が標準で出力）は、指定されたタイムゾーンの壁時計時刻として正しく UTC に変換されます（DST 込み）。`Z` 付きは UTC として解釈。TZID も `Z` も無い値は Worker のランタイム時刻（Cloudflare Workers は常に UTC）とみなすフォールバックです。ローカル日付のみのオールデイはローカル日として扱われます。
+- **EXDATE / RECURRENCE-ID**: 繰り返し予定から除外された回（EXDATE）はスキップされ、1回だけ変更された回（RECURRENCE-ID を持つ VEVENT）は元の回を上書きして表示されます。`RANGE=THISANDFUTURE`（それ以降すべてを変更）には未対応です。
 - **HTTPS のみ**: Worker の `fetchIcalText` は `https://` の URL のみ許可します（`webcal://` は `https://` に置換）。
 
 ---

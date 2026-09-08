@@ -633,6 +633,62 @@ button,input,select{font-family:inherit}
 .switch-dot{width:8px;height:8px;border-radius:50%;background:var(--bd);flex-shrink:0}
 .switch-item.cur .switch-dot{background:var(--p)}
 
+/* ── Toast notifications ── */
+#toast-container{
+  position:fixed;right:16px;bottom:16px;z-index:400;
+  display:flex;flex-direction:column-reverse;gap:8px;
+  max-width:min(360px,92vw);pointer-events:none;
+}
+.toast{
+  pointer-events:auto;display:flex;align-items:center;gap:8px;
+  background:var(--bg3);border:1px solid var(--bd);border-radius:10px;
+  padding:10px 12px;box-shadow:var(--shadow-lg);font-size:12px;color:var(--tx);
+  animation:toast-in .18s ease-out;
+}
+.toast-out{animation:toast-out .18s ease-in forwards}
+@keyframes toast-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toast-out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(6px)}}
+.toast-icon{flex-shrink:0;font-size:14px}
+.toast-error .toast-icon{color:var(--r)}
+.toast-success .toast-icon{color:var(--g)}
+.toast-info .toast-icon{color:var(--p)}
+.toast-msg{flex:1;line-height:1.4}
+.toast-action{
+  flex-shrink:0;padding:4px 10px;border-radius:6px;border:none;background:var(--p);
+  color:#fff;font-size:11px;font-weight:500;cursor:pointer;
+}
+.toast-close{
+  flex-shrink:0;background:transparent;border:none;color:var(--tx3);
+  cursor:pointer;font-size:12px;padding:2px;
+}
+.toast-close:hover{color:var(--tx)}
+
+/* ── CSV import modal ── */
+#csv-modal{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
+  backdrop-filter:blur(6px);z-index:190;align-items:center;justify-content:center;
+}
+#csv-modal.open{display:flex}
+.csv-box{
+  background:var(--bg3);border-radius:14px;padding:24px;
+  width:min(560px,92vw);display:flex;flex-direction:column;gap:10px;
+  box-shadow:var(--shadow-lg);border:1px solid var(--bd);
+}
+.csv-hint{font-size:11px;color:var(--tx3);line-height:1.5}
+.csv-actions-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.csv-textarea{
+  width:100%;min-height:110px;resize:vertical;font-family:var(--mono);font-size:11px;
+  line-height:1.5;
+}
+.csv-preview{max-height:220px;overflow-y:auto}
+.csv-table{width:100%;border-collapse:collapse;font-size:11px}
+.csv-table th{text-align:left;color:var(--tx3);font-weight:500;padding:4px 6px;border-bottom:1px solid var(--bd)}
+.csv-table td{padding:4px 6px;border-bottom:1px solid var(--bd2);color:var(--tx2)}
+.csv-table td.csv-url{font-family:var(--mono);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.csv-row-err{opacity:.55}
+.csv-swatch{display:inline-block;width:12px;height:12px;border-radius:50%}
+.csv-err{font-size:11px;color:var(--r);padding:4px 0}
+
 [data-theme="dark"] .month-grid,[data-theme="midnight"] .month-grid,[data-theme="mocha"] .month-grid{border-color:var(--bd)}
 [data-theme="dark"] .cal-week,[data-theme="midnight"] .cal-week,[data-theme="mocha"] .cal-week{border-bottom-color:var(--bd)}
 [data-theme="dark"] .mcell,[data-theme="midnight"] .mcell,[data-theme="mocha"] .mcell{border-right-color:var(--bd)}
@@ -770,7 +826,10 @@ button,input,select{font-family:inherit}
           </div>
           <div class="adm-card-body">
             <div class="cal-list" id="cal-list"></div>
-            <button class="btn-add-cal" onclick="addCalRow()">＋ カレンダーを追加</button>
+            <div style="display:flex;gap:8px">
+              <button class="btn-add-cal" style="flex:1" onclick="addCalRow()">＋ カレンダーを追加</button>
+              <button class="btn-add-cal" style="flex:1" onclick="openCsvImport()">📄 CSVインポート</button>
+            </div>
           </div>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;padding-bottom:8px">
@@ -863,6 +922,28 @@ button,input,select{font-family:inherit}
   </div>
 </div>
 
+<!-- CSV Import Modal -->
+<div id="csv-modal">
+  <div class="csv-box">
+    <div class="switch-title">カレンダーをCSVインポート</div>
+    <div class="csv-hint">1行目はヘッダー行にしてください（<code>url,name,color</code>。name と color は省略可）。区切り文字はカンマまたはタブに対応。URL は <code>https://</code> または <code>webcal://</code> のみ有効です。</div>
+    <div class="csv-actions-row">
+      <input type="file" id="csv-file" accept=".csv,text/csv,text/plain" onchange="csvFileSelected(this)" style="display:none">
+      <button type="button" class="btn-out" onclick="document.getElementById('csv-file').click()">📁 ファイルを選択</button>
+      <span class="csv-hint" style="margin:0">またはテキストエリアに直接貼り付け</span>
+    </div>
+    <textarea id="csv-text" class="form-inp csv-textarea" placeholder="url,name,color&#10;https://example.com/a.ics,チームA,#1a73e8" oninput="previewCsv()"></textarea>
+    <div id="csv-preview" class="csv-preview"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px">
+      <button class="btn-out" onclick="closeCsvImport()">キャンセル</button>
+      <button class="btn-prim" id="csv-import-btn" disabled onclick="commitCsvImport()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notifications -->
+<div id="toast-container"></div>
+
 <script>
 // ══════════════════════════════════════════════
 //  CONSTANTS
@@ -925,8 +1006,66 @@ async function api(path, opts = {}) {
   const text = await res.text();
   let data = null;
   try { data = text ? JSON.parse(text) : null; } catch { data = { raw: text }; }
-  if (!res.ok) throw new Error((data && data.error) || text || res.statusText);
+  if (!res.ok) {
+    const e = new Error((data && data.error) || text || res.statusText);
+    e.status = res.status;
+    throw e;
+  }
   return data;
+}
+
+// ══════════════════════════════════════════════
+//  TOAST NOTIFICATIONS（alert() の代わりに使う非ブロッキング通知）
+// ══════════════════════════════════════════════
+let _toastSeq = 0;
+function toast(msg, type = 'info', opts = {}) {
+  const c = document.getElementById('toast-container');
+  if (!c) return;
+  const el = document.createElement('div');
+  el.className = 'toast toast-' + type;
+  el.id = 'toast-' + (++_toastSeq);
+  const icon = type === 'error' ? '⚠' : type === 'success' ? '✓' : 'ℹ';
+  const iconEl = document.createElement('span');
+  iconEl.className = 'toast-icon';
+  iconEl.textContent = icon;
+  const msgEl = document.createElement('span');
+  msgEl.className = 'toast-msg';
+  msgEl.textContent = msg;
+  el.appendChild(iconEl);
+  el.appendChild(msgEl);
+  if (opts.actionLabel && opts.onAction) {
+    const btn = document.createElement('button');
+    btn.className = 'toast-action';
+    btn.textContent = opts.actionLabel;
+    btn.onclick = () => { opts.onAction(); el.remove(); };
+    el.appendChild(btn);
+  }
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'toast-close';
+  closeBtn.textContent = '✕';
+  closeBtn.onclick = () => el.remove();
+  el.appendChild(closeBtn);
+  c.appendChild(el);
+  const duration = opts.duration ?? (type === 'error' ? 6000 : 3200);
+  if (duration > 0) {
+    setTimeout(() => {
+      el.classList.add('toast-out');
+      setTimeout(() => el.remove(), 200);
+    }, duration);
+  }
+}
+
+/** 管理操作（保存・削除等）失敗時の共通ハンドラ。409（バージョン競合）は再読み込み導線を出す */
+function handleActionError(e) {
+  if (e && e.status === 409) {
+    toast('他の場所で先に保存されています。再読み込みして最新の状態から編集し直してください。', 'error', {
+      actionLabel: '再読み込み',
+      onAction: () => location.reload(),
+      duration: 0,
+    });
+    return;
+  }
+  toast((e && e.message) || String(e), 'error', { duration: 0 });
 }
 
 async function loadTenant() {
@@ -1076,7 +1215,7 @@ async function fetchAllCalendars() {
       renderSignage();
     } catch (e) {
       console.warn(e);
-      setStatus('エラー', 'err');
+      setStatus('エラー', 'err', e.message);
     }
     return;
   }
@@ -1095,14 +1234,16 @@ async function fetchAllCalendars() {
     renderSignage();
   } catch (e) {
     console.warn(e);
-    setStatus('エラー', 'err');
+    setStatus('エラー', 'err', e.message);
   }
 }
 
-function setStatus(msg, state) {
+function setStatus(msg, state, detail) {
   document.getElementById('stxt').textContent = msg;
   const d = document.getElementById('sdot');
   d.className = 'sdot' + (state==='err'?' err':state==='loading'?' loading':'');
+  const pill = document.querySelector('.status-pill');
+  if (pill) pill.title = detail || '';
 }
 
 // ══════════════════════════════════════════════
@@ -1491,7 +1632,7 @@ function renderMonthGrid() {
 // ══════════════════════════════════════════════
 function copyText(t) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(t).then(() => alert('コピーしました')).catch(() => window.prompt('コピー', t));
+    navigator.clipboard.writeText(t).then(() => toast('コピーしました', 'success')).catch(() => window.prompt('コピー', t));
   } else window.prompt('コピー', t);
 }
 
@@ -1522,8 +1663,8 @@ async function addInviteForEditingProfile() {
     await api('/api/host/displays', { method: 'POST', body: { profileId: pid } });
     await loadTenant();
     renderInviteList();
-    alert('招待リンクを追加しました');
-  } catch (e) { alert(e.message); }
+    toast('招待リンクを追加しました', 'success');
+  } catch (e) { handleActionError(e); }
 }
 
 async function deleteInvite(inviteId) {
@@ -1532,7 +1673,7 @@ async function deleteInvite(inviteId) {
     await api('/api/host/displays/' + encodeURIComponent(inviteId), { method: 'DELETE' });
     await loadTenant();
     renderInviteList();
-  } catch (e) { alert(e.message); }
+  } catch (e) { handleActionError(e); }
 }
 
 function renderAdmin() {
@@ -1718,12 +1859,127 @@ function removeCalEntry(pid, calId) {
   saveState(); renderProfileEditor(p);
 }
 
+// ══════════════════════════════════════════════
+//  CSV IMPORT（カレンダー URL の一括登録）
+// ══════════════════════════════════════════════
+const CSV_MAX_ROWS = 200;
+let _csvParsedRows = [];
+
+/** 簡易 CSV/TSV パーサ。ダブルクォート囲み（""でエスケープ）に対応 */
+function parseCsvText(text) {
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.trim() !== '');
+  if (!lines.length) return { header: [], rows: [] };
+  const commaCount = (lines[0].match(/,/g) || []).length;
+  const tabCount = (lines[0].match(/\t/g) || []).length;
+  const delim = tabCount > commaCount ? '\t' : ',';
+  function splitLine(line) {
+    const out = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (inQ) {
+        if (ch === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else inQ = false; }
+        else cur += ch;
+      } else if (ch === '"') inQ = true;
+      else if (ch === delim) { out.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    out.push(cur.trim());
+    return out;
+  }
+  return { header: splitLine(lines[0]), rows: lines.slice(1).map(splitLine) };
+}
+
+function openCsvImport() {
+  if (!editingProfileId) return;
+  document.getElementById('csv-text').value = '';
+  document.getElementById('csv-preview').innerHTML = '';
+  document.getElementById('csv-import-btn').disabled = true;
+  _csvParsedRows = [];
+  document.getElementById('csv-modal').classList.add('open');
+}
+function closeCsvImport() { document.getElementById('csv-modal').classList.remove('open'); }
+
+function csvFileSelected(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    document.getElementById('csv-text').value = String(reader.result || '');
+    previewCsv();
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function previewCsv() {
+  const text = document.getElementById('csv-text').value;
+  const preview = document.getElementById('csv-preview');
+  _csvParsedRows = [];
+  if (!text.trim()) {
+    preview.innerHTML = '';
+    document.getElementById('csv-import-btn').disabled = true;
+    return;
+  }
+  const { header, rows } = parseCsvText(text);
+  const idx = {
+    url: header.findIndex(h => h.toLowerCase() === 'url'),
+    name: header.findIndex(h => h.toLowerCase() === 'name'),
+    color: header.findIndex(h => h.toLowerCase() === 'color'),
+  };
+  if (idx.url < 0) {
+    preview.innerHTML = '<div class="csv-err">ヘッダー行に "url" 列が見つかりません（例: url,name,color）</div>';
+    document.getElementById('csv-import-btn').disabled = true;
+    return;
+  }
+  const limited = rows.slice(0, CSV_MAX_ROWS);
+  const overflow = rows.length - limited.length;
+  const valid = [];
+  let html = '<table class="csv-table"><thead><tr><th></th><th>URL</th><th>名前</th><th>色</th></tr></thead><tbody>';
+  limited.forEach((cols) => {
+    const url = (cols[idx.url] || '').trim();
+    const name = idx.name >= 0 ? (cols[idx.name] || '').trim() : '';
+    let color = idx.color >= 0 ? (cols[idx.color] || '').trim() : '';
+    const ok = /^(https:\/\/|webcal:\/\/)/i.test(url);
+    if (!/^#[0-9a-fA-F]{6}$/.test(color)) color = GC_COLORS[valid.length % GC_COLORS.length];
+    if (ok) valid.push({ url, name, color });
+    html += `<tr class="${ok ? '' : 'csv-row-err'}">
+      <td>${ok ? '✓' : '✕'}</td>
+      <td class="csv-url">${esc(url || '(空)')}</td>
+      <td>${esc(name || '—')}</td>
+      <td><span class="csv-swatch" style="background:${ok ? color : '#ccc'}"></span></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  if (overflow > 0) html += `<div class="csv-err">先頭 ${CSV_MAX_ROWS} 行のみ表示・登録されます（残り ${overflow} 行は無視）</div>`;
+  const invalidCount = limited.length - valid.length;
+  if (invalidCount > 0) {
+    html = `<div class="csv-err">${invalidCount} 行が URL 形式エラーのため除外されます（https:// または webcal:// のみ）</div>` + html;
+  }
+  preview.innerHTML = html;
+  _csvParsedRows = valid;
+  document.getElementById('csv-import-btn').disabled = valid.length === 0;
+}
+
+function commitCsvImport() {
+  const p = S.profiles.find(x => x.id === editingProfileId);
+  if (!p || !_csvParsedRows.length) return;
+  _csvParsedRows.forEach((row, i) => {
+    const id = 'c' + Date.now() + '_' + i;
+    p.calendars.push({ id, url: row.url, name: row.name, color: row.color, autoName: false });
+  });
+  const count = _csvParsedRows.length;
+  saveState();
+  renderProfileEditor(p);
+  closeCsvImport();
+  toast(`${count} 件のカレンダーを追加しました。「プロファイルを保存」を押すと確定します`, 'success');
+}
+
 async function fetchOneCal(pid, calId) {
   if (IS_CLIENT_MODE) return;
   const p = S.profiles.find(x=>x.id===pid);
   if(!p) return;
   const cal = p.calendars.find(c=>c.id===calId);
-  if(!cal||!cal.url) { alert('URLを入力してください'); return; }
+  if(!cal||!cal.url) { toast('URLを入力してください', 'error'); return; }
 
   const statEl = document.getElementById('cstat-'+calId);
   const nameEl = document.getElementById('cname-'+calId);
@@ -1764,7 +2020,7 @@ async function adminFetchAll() {
       renderProfileEditor(p);
     }
     await fetchAllCalendars();
-  } catch (e) { alert(e.message); }
+  } catch (e) { handleActionError(e); }
   btn.textContent='🔄 全カレンダー取得'; btn.disabled=false;
 }
 
@@ -1778,7 +2034,7 @@ async function saveProfile() {
     renderProfileList();
     const btn = document.querySelector('#adm-pe .btn-prim');
     if(btn){ const t=btn.textContent; btn.textContent='✓ 保存済み'; setTimeout(()=>btn.textContent=t,1500); }
-  } catch (e) { alert(e.message); }
+  } catch (e) { handleActionError(e); }
 }
 
 async function activateProfile() {
@@ -1789,7 +2045,7 @@ async function activateProfile() {
     const p = S.profiles.find(x=>x.id===editingProfileId);
     if(p) renderProfileEditor(p);
     await fetchAllCalendars();
-  } catch (e) { alert(e.message); }
+  } catch (e) { handleActionError(e); }
 }
 
 async function createProfile() {
@@ -1801,11 +2057,11 @@ async function createProfile() {
   renderProfileList();
   const p = S.profiles.find(x=>x.id===id);
   renderProfileEditor(p);
-  try { await syncTenant(); } catch (e) { alert(e.message); }
+  try { await syncTenant(); } catch (e) { handleActionError(e); }
 }
 
 async function deleteProfile() {
-  if(S.profiles.length<=1){ alert('最低1つのプロファイルが必要です'); return; }
+  if(S.profiles.length<=1){ toast('最低1つのプロファイルが必要です', 'error'); return; }
   if(!confirm('このプロファイルを削除しますか？')) return;
   S.profiles = S.profiles.filter(p=>p.id!==editingProfileId);
   if(S.activeProfileId===editingProfileId) S.activeProfileId=S.profiles[0].id;
@@ -1813,7 +2069,7 @@ async function deleteProfile() {
   try {
     await syncTenant();
     renderAdmin();
-  } catch (e) { alert(e.message); }
+  } catch (e) { handleActionError(e); }
 }
 
 async function saveSettings() {
@@ -1822,7 +2078,7 @@ async function saveSettings() {
     const btn=document.querySelector('#adm-settings .btn-prim');
     if(btn){const t=btn.textContent;btn.textContent='✓ 保存済み';setTimeout(()=>btn.textContent=t,1500);}
     resetRefreshTimer();
-  } catch (e) { alert(e.message); }
+  } catch (e) { handleActionError(e); }
 }
 
 // ══════════════════════════════════════════════
@@ -1854,10 +2110,13 @@ async function submitPin() {
     renderInviteList();
   } catch (e) {
     setHostToken(prev);
-    document.getElementById('pin-err').textContent = 'SECRET が違うか、API に接続できません';
+    const msg = e && e.status === 401 ? 'HOST_SECRET が違います'
+      : e && e.status === 503 ? 'Worker に HOST_SECRET が未設定です'
+      : `API に接続できません（${(e && e.message) || 'ネットワークエラー'}）`;
+    document.getElementById('pin-err').textContent = msg;
     el.value = '';
     el.focus();
-    setTimeout(() => { document.getElementById('pin-err').textContent = ''; }, 3500);
+    setTimeout(() => { document.getElementById('pin-err').textContent = ''; }, 5000);
   }
 }
 // Legacy alias
@@ -1884,7 +2143,7 @@ async function activateProfileDirect(id) {
   closeSwitchModal();
   try {
     if (!IS_CLIENT_MODE && getHostToken()) await syncTenant();
-  } catch (e) { alert(e.message); }
+  } catch (e) { handleActionError(e); }
   fetchAllCalendars();
 }
 
